@@ -27,9 +27,9 @@ fatio.exe mklfs Disk Part format [CLUSTER_SIZE]
 Set/remove the label of a volume.
 
 ```shell
-fatio.exe label [String]
+fatio.exe label Disk Part [String]
 # Example:
-fatio.exe label mydisk
+fatio.exe label Disk Part mydisk
 ```
 
 ### Mkdir
