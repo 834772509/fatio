@@ -9,7 +9,7 @@ A program for reading and writing FAT32/EXFAT file systems written by alive.
 List supported partitions.
 
 ```shell
-`fatio.exe list`
+fatio.exe list
 ```
 
 ### Mkfs
