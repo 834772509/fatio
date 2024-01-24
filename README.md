@@ -17,9 +17,9 @@ fatio.exe list
 Create an FAT/exFAT volume, Supported format options: FAT, FAT32, EXFAT.
 
 ```shell
-fatio.exe mklfs Disk Part format [CLUSTER_SIZE]
+fatio.exe mkfs Disk Part format [CLUSTER_SIZE]
 # Example:
-# fatio.exe mkdir 1 2
+# fatio.exe mkfs 1 2 FAT
 ```
 
 ### Label
