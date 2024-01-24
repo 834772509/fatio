@@ -1,0 +1,240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="源文件\fatfs">
+      <UniqueIdentifier>{938f35f6-8373-4914-9129-61db083dbd45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\grub">
+      <UniqueIdentifier>{c1d61dd1-c7f1-4c52-b9f3-0599ff7c2d40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub">
+      <UniqueIdentifier>{26e07c37-afc5-4906-bb8a-c1aacb420c11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub\kern">
+      <UniqueIdentifier>{afd1887a-fa44-4c74-8c19-5cdbb3c1e761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub\lib">
+      <UniqueIdentifier>{79a22f91-d57c-4b8d-9b3e-989527f44e07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub\lib\mscompress">
+      <UniqueIdentifier>{887cb1c1-6104-465b-9c00-e12f5bcf22d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub\partmap">
+      <UniqueIdentifier>{aaaf373c-fa46-48ed-85f3-eeb207000e82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub\disk">
+      <UniqueIdentifier>{4bce6cc8-1156-4fea-af7e-f63fd16f954c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\grub\fs">
+      <UniqueIdentifier>{1b0a4be0-1693-4139-9629-38563979fe7d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="fatio.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="fatfs\diskio.c">
+      <Filter>源文件\fatfs</Filter>
+    </ClCompile>
+    <ClCompile Include="fatfs\ff.c">
+      <Filter>源文件\fatfs</Filter>
+    </ClCompile>
+    <ClCompile Include="fatfs\ffsystem.c">
+      <Filter>源文件\fatfs</Filter>
+    </ClCompile>
+    <ClCompile Include="fatfs\ffunicode.c">
+      <Filter>源文件\fatfs</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\disk.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\dl.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\err.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\file.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\fs.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\list.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\misc.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\mm.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\partition.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\kern\time.c">
+      <Filter>源文件\grub\kern</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\lib\charset.c">
+      <Filter>源文件\grub\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\lib\datetime.c">
+      <Filter>源文件\grub\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\lib\mscompress\huffman.c">
+      <Filter>源文件\grub\lib\mscompress</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\lib\mscompress\lzx.c">
+      <Filter>源文件\grub\lib\mscompress</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\lib\mscompress\xpress.c">
+      <Filter>源文件\grub\lib\mscompress</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\partmap\gpt.c">
+      <Filter>源文件\grub\partmap</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\partmap\msdos.c">
+      <Filter>源文件\grub\partmap</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\disk\loopback.c">
+      <Filter>源文件\grub\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\disk\windisk.c">
+      <Filter>源文件\grub\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\fs\exfat.c">
+      <Filter>源文件\grub\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\fs\fat.c">
+      <Filter>源文件\grub\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\fs\fshelp.c">
+      <Filter>源文件\grub\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\fs\iso9660.c">
+      <Filter>源文件\grub\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\fs\udf.c">
+      <Filter>源文件\grub\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="grub\fs\wim.c">
+      <Filter>源文件\grub\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="copy.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ctx.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mkdir.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="extract.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="dump.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fatfs\diskio.h">
+      <Filter>源文件\fatfs</Filter>
+    </ClInclude>
+    <ClInclude Include="fatfs\ff.h">
+      <Filter>源文件\fatfs</Filter>
+    </ClInclude>
+    <ClInclude Include="fatfs\ffconf.h">
+      <Filter>源文件\fatfs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fatio.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\loopback.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\charset.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\datetime.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\disk.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\err.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\exfat.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\fat.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\file.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\fs.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\fshelp.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\gpt_partition.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\list.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\misc.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\mm.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\msdos_partition.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\partition.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\safemath.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\symbol.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\time.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\types.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grub\udf.h">
+      <Filter>头文件\grub</Filter>
+    </ClInclude>
+    <ClInclude Include="grub\lib\mscompress\mscompress.h">
+      <Filter>源文件\grub\lib\mscompress</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>
