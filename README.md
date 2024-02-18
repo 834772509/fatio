@@ -1,6 +1,6 @@
 # fatio
 
-A program for reading and writing FAT32/EXFAT file systems written by alive.
+A program for reading and writing FAT32/EXFAT file systems.
 
 ## command
 
@@ -37,9 +37,19 @@ fatio.exe label Disk Part mydisk
 Create a new directory.
 
 ```shell
-fatio.exe Disk Part Dir
+fatio.exe mkdir Disk Part Dir
 # Example:
-# fatio.exe mkdir 1 2 dir
+# fatio.exe mkdir 1 2 \dir
+```
+
+### ls
+
+List files in the specified directory.
+
+```shell
+fatio.exe ls Disk Part Dir
+# Example:
+# fatio.exe ls 1 2 \
 ```
 
 ### Copy
@@ -51,7 +61,30 @@ fatio.exe copy Disk Part Src_File Dest_File
 # Examples:
 # fatio.exe copy 1 2 D:\text.txt text.txt
 # fatio.exe copy 1 2 D:\text.txt \dir\text.txt
+# fatio.exe copy 1 2 D:\files \
 ```
+
+### Remove
+
+Remove the file from FAT partition.
+
+```shell
+fatio.exe remove Disk Part Dest_File
+# Examples:
+fatio.exe remove 1 2 \text.txt
+fatio.exe remove 1 2 \dir
+```
+
+### Move
+
+move the file from FAT partition.
+
+```shell
+fatio.exe move Disk Part Src_File Dest_File
+# Examples:
+fatio.exe move 1 2 \text.txt \abc.txt
+```
+
 
 ### Extract
 
@@ -60,16 +93,16 @@ Extract the archive file to FAT partition.
 ```shell
 fatio.exe extract Disk Part File
 # Example:
-fatio.exe 1 2 D:\windows.iso
+fatio.exe extract 1 2 D:\windows.iso
 ```
 
-### dump
+### Dump
 
-Copy the file from FAT partition.
+Dump the file from FAT partition.
 
 ```shell
-fatio.exe Disk Part Src_File Dest_File
+fatio.exe dump Disk Part Src_File Dest_File
 # Examples:
-fatio.exe copy 1 2 text.txt D:\text.txt
-fatio.exe copy 1 2 \dir\text.txt D:\text.txt
+fatio.exe dump 1 2 text.txt D:\text.txt
+fatio.exe dump 1 2 \dir\text.txt D:\text.txt
 ```

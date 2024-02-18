@@ -147,6 +147,18 @@
     <ClCompile Include="dump.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="remove.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ls.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="move.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="cat.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h">
@@ -233,8 +245,19 @@
     <ClInclude Include="grub\lib\mscompress\mscompress.h">
       <Filter>源文件\grub\lib\mscompress</Filter>
     </ClInclude>
+    <ClInclude Include="include\dirent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

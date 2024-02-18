@@ -45,6 +45,9 @@
 # Kernel Module Compile Results
 *.mod*
 *.cmd
+Win32
+x64
+packages
 .tmp_versions/
 modules.order
 Module.symvers

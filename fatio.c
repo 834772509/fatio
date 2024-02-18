@@ -4,6 +4,7 @@
 #include <dl.h>
 #include <wchar.h>
 #include <winioctl.h>
+#include <locale.h>
 
 #include <grub/disk.h>
 #include <grub/fs.h>
@@ -15,15 +16,19 @@
 static void
 print_help(const wchar_t* prog_name)
 {
-	wprintf(L"Usage: %s OPTIONS\n", prog_name);
-	wprintf(L"OPTIONS:\n");
-	wprintf(L"\tLIST\n\t\tList supported partitions.\n");
-	wprintf(L"\tCOPY    DISK PART SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
-	wprintf(L"\tMKDIR   DISK PART DIR\n\t\tCreate a new directory.\n");
-	wprintf(L"\tMKFS    DISK PART FORMAT [CLUSTER_SIZE]\n\t\tCreate an FAT/exFAT volume.\n\t\tSupported format options: FAT, FAT32, EXFAT.\n");
-	wprintf(L"\tLABEL   DISK PART [STRING]\n\t\tSet/remove the label of a volume.\n");
-	wprintf(L"\tEXTRACT DISK PART FILE\n\t\tExtract the archive file to FAT partition.\n");
-	wprintf(L"\tDUMP    DISK PART SRC_FILE DEST_FILE\n\t\tCopy the file from FAT partition.\n");
+	wprintf(L"Usage: %s Options\n", prog_name);
+	wprintf(L"Options:\n");
+	wprintf(L"\tlist\n\t\tList supported partitions.\n");
+	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
+	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
+	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
+	wprintf(L"\tmkfs    Disk Part FORMAT [CLUSTER_SIZE]\n\t\tCreate an FAT/exFAT volume.\n\t\tSupported format options: FAT, FAT32, EXFAT.\n");
+	wprintf(L"\tlabel   Disk Part [STRING]\n\t\tSet/remove the label of a volume.\n");
+	wprintf(L"\textract Disk Part FILE\n\t\tExtract the archive file to FAT partition.\n");
+	wprintf(L"\tdump    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file from FAT partition.\n");
+	wprintf(L"\tremove  Disk Part DEST_FILE\n\t\tRemove the file from FAT partition.\n");
+	wprintf(L"\tmove    Disk Part SRC_FILE DEST_FILE\n\t\tRename/move files from FAT partition.\n");
+	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
 }
 
 static int
@@ -72,7 +77,7 @@ callback_enum_disk(const char* name, void* data)
 static void
 print_list(void)
 {
-	grub_printf("DISK\tPART\tFS\tSIZE\t\tLABEL\n");
+	grub_printf("Disk\tPart\tFS\tSize\t\tLabel\n");
 	grub_disk_iterate(callback_enum_disk, NULL);
 }
 
@@ -202,10 +207,85 @@ dump_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wc
 	return ret;
 }
 
+static bool
+remove_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
+{
+	FATFS fs;
+	unsigned long disk_id = wcstoul(disk, NULL, 10);
+	unsigned long part_id = wcstoul(part, NULL, 10);
+	if (!fatio_set_disk(disk_id, part_id))
+	{
+		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+		return false;
+	}
+	f_mount(&fs, L"0:", 0);
+	bool ret = fatio_remove(dst);
+	f_unmount(L"0:");
+	fatio_unset_disk();
+	return ret;
+}
+
+static bool
+list_file(const wchar_t* disk, const wchar_t* part, const wchar_t* path)
+{
+	FATFS fs;
+	unsigned long disk_id = wcstoul(disk, NULL, 10);
+	unsigned long part_id = wcstoul(part, NULL, 10);
+	if (!fatio_set_disk(disk_id, part_id))
+	{
+		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+		return false;
+	}
+	f_mount(&fs, L"0:", 0);
+
+	bool ret = fatio_list(path);
+
+	f_unmount(L"0:");
+	fatio_unset_disk();
+	return ret;
+}
+
+static bool
+move_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wchar_t* dst)
+{
+	FATFS fs;
+	unsigned long disk_id = wcstoul(disk, NULL, 10);
+	unsigned long part_id = wcstoul(part, NULL, 10);
+	if (!fatio_set_disk(disk_id, part_id))
+	{
+		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+		return false;
+	}
+	f_mount(&fs, L"0:", 0);
+	bool ret = fatio_move(src, dst);
+	f_unmount(L"0:");
+	fatio_unset_disk();
+	return ret;
+}
+
+static bool
+cat_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
+{
+	FATFS fs;
+	unsigned long disk_id = wcstoul(disk, NULL, 10);
+	unsigned long part_id = wcstoul(part, NULL, 10);
+	if (!fatio_set_disk(disk_id, part_id))
+	{
+		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+		return false;
+	}
+	f_mount(&fs, L"0:", 0);
+	bool ret = fatio_cat(dst);
+	f_unmount(L"0:");
+	fatio_unset_disk();
+	return ret;
+}
+
 int
 wmain(int argc, wchar_t* argv[])
 {
 	grub_module_init();
+	setlocale(LC_ALL, "chs");
 
 	if (argc < 2)
 		print_help(argv[0]);
@@ -217,7 +297,9 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (!copy_file(argv[2], argv[3], argv[4], argv[5]))
+			if (copy_file(argv[2], argv[3], argv[4], argv[5]))
+				grub_printf("File copy successfully\n");
+			else
 				grub_printf("Failed to copy file\n");
 		}
 	}
@@ -227,7 +309,9 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (!mkdir(argv[2], argv[3], argv[4]))
+			if (mkdir(argv[2], argv[3], argv[4]))
+				grub_printf("Directory created successfully\n");
+			else
 				grub_printf("Failed to create directory\n");
 		}
 	}
@@ -237,7 +321,9 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (!mkfs(argv[2], argv[3], argv[4], argc > 5 ? argv[5] : NULL))
+			if (mkfs(argv[2], argv[3], argv[4], argc > 5 ? argv[5] : NULL))
+				grub_printf("Volume created successfully\n");
+			else
 				grub_printf("Failed to create volume\n");
 		}
 	}
@@ -247,7 +333,9 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (!set_label(argv[2], argv[3], argc > 4 ? argv[4] : L""))
+			if (set_label(argv[2], argv[3], argc > 4 ? argv[4] : L""))
+				grub_printf("Label set successfully\n");
+			else
 				grub_printf("Failed to set label\n");
 		}
 	}
@@ -257,7 +345,9 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (!extract(argv[2], argv[3], argv[4]))
+			if (extract(argv[2], argv[3], argv[4]))
+				grub_printf("File extract successfully\n");
+			else
 				grub_printf("Failed to extract file\n");
 		}
 	}
@@ -267,9 +357,49 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (!dump_file(argv[2], argv[3], argv[4], argv[5]))
+			if (dump_file(argv[2], argv[3], argv[4], argv[5]))
+				grub_printf("File dump successfully\n");
+			else
 				grub_printf("Failed to dump file\n");
 		}
+	}
+	else if (_wcsicmp(argv[1], L"REMOVE") == 0)
+	{
+		if (argc < 5)
+			print_help(argv[0]);
+		else
+		{
+			if (remove_file(argv[2], argv[3], argv[4]))
+				grub_printf("File remove successfully\n");
+			else
+				grub_printf("Failed to remove file\n");
+		}
+	}
+	else if (_wcsicmp(argv[1], L"LS") == 0)
+	{
+		if (argc < 4)
+			print_help(argv[0]);
+		else
+			list_file(argv[2], argv[3], argv[4]);
+	}
+	else if (_wcsicmp(argv[1], L"MOVE") == 0)
+	{
+		if (argc < 6)
+			print_help(argv[0]);
+		else
+		{
+			if (move_file(argv[2], argv[3], argv[4], argv[5]))
+				grub_printf("File move successfully\n");
+			else
+				grub_printf("Failed to move file\n");
+		}
+	}
+	else if (_wcsicmp(argv[1], L"CAT") == 0)
+	{
+		if (argc < 5)
+			print_help(argv[0]);
+		else
+			cat_file(argv[2], argv[3], argv[4]);
 	}
 	else
 		print_help(argv[0]);

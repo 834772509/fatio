@@ -37,3 +37,15 @@ fatio_extract(const wchar_t* src);
 
 bool
 fatio_dump(const wchar_t* in_name, const wchar_t* out_name);
+
+bool
+fatio_remove(const wchar_t* path);
+
+bool
+fatio_list(const wchar_t* path);
+
+bool
+fatio_move(const wchar_t* in_name, const wchar_t* out_name);
+
+bool
+fatio_cat(const wchar_t* path);

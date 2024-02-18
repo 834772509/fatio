@@ -28,7 +28,7 @@ lock_volume(unsigned disk_id)
 	WCHAR path[MAX_PATH];
 	grub_uint64_t lba = grub_partition_get_start(g_ctx.disk->partition);
 
-	grub_printf("disk %u, lba = %llu\n", disk_id, lba);
+	//grub_printf("disk %u, lba = %llu\n", disk_id, lba);
 
 	HANDLE volume = FindFirstVolumeW(path, MAX_PATH);
 
@@ -67,7 +67,7 @@ lock_volume(unsigned disk_id)
 			goto next;
 		if (lba != (grub_uint64_t)(pie.StartingOffset.QuadPart >> GRUB_DISK_SECTOR_BITS))
 			goto next;
-		wprintf(L"Locking: %s, %lu, %lu, %llu\n", path, sdn.DeviceNumber, sdn.PartitionNumber, pie.StartingOffset.QuadPart >> GRUB_DISK_SECTOR_BITS);
+		//wprintf(L"Locking: %s, %lu, %lu, %llu\n", path, sdn.DeviceNumber, sdn.PartitionNumber, pie.StartingOffset.QuadPart >> GRUB_DISK_SECTOR_BITS);
 		dw = 0;
 		if (!DeviceIoControl(hv, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &dw, NULL))
 		{
