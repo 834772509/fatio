@@ -377,7 +377,7 @@ wmain(int argc, wchar_t* argv[])
 	}
 	else if (_wcsicmp(argv[1], L"LS") == 0)
 	{
-		if (argc < 4)
+		if (argc < 5)
 			print_help(argv[0]);
 		else
 			list_file(argv[2], argv[3], argv[4]);
