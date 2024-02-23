@@ -47,28 +47,26 @@ callback_enum_disk(const char* name, void* data)
 		grub_disk_close(disk);
 		return 0;
 	}
+
 	grub_errno = GRUB_ERR_NONE;
 	fs = grub_fs_probe(disk);
-	if (fs)
+
+	grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
+	grub_printf("%d\t", disk->partition->number + 1);
+	grub_printf("%s\t", fs ? fs->name : "-");
+	grub_printf("%-10s\t", grub_get_human_size(grub_disk_native_sectors(disk) << GRUB_DISK_SECTOR_BITS, GRUB_HUMAN_SIZE_SHORT));
+
+	if (fs && fs->fs_label)
 	{
-		if (grub_strcmp(fs->name, "fat") == 0 || grub_strcmp(fs->name, "exfat") == 0)
-		{
-			grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
-			grub_printf("%d\t", disk->partition->number + 1);
-			grub_printf("%s\t", fs->name);
-			grub_printf("%-10s\t",
-				grub_get_human_size(grub_disk_native_sectors(disk) << GRUB_DISK_SECTOR_BITS, GRUB_HUMAN_SIZE_SHORT));
-			if (fs->fs_label)
-			{
-				char* label = NULL;
-				fs->fs_label(disk, &label);
-				if (label)
-					grub_printf("%s", label);
-				grub_free(label);
-			}
-			grub_printf("\n");
-		}
+
+		char* label = NULL;
+		fs->fs_label(disk, &label);
+		if (label)
+			grub_printf("%s", label);
+		grub_free(label);
+
 	}
+	grub_printf("\n");
 	grub_disk_close(disk);
 	grub_errno = GRUB_ERR_NONE;
 	return 0;
