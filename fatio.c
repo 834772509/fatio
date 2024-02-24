@@ -10,6 +10,7 @@
 #include <grub/fs.h>
 #include <grub/err.h>
 #include <grub/partition.h>
+#include <grub/fat.h>
 
 #include "fatfs/ff.h"
 
@@ -118,7 +119,7 @@ mkdir(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
 static bool
 mkfs(const wchar_t* disk, const wchar_t* part, const wchar_t* fmt, const wchar_t* cluster)
 {
-	MKFS_PARM opt = { 0 };
+	MKFS_PARM opt = { .au_size = 0, .align = 8, .n_fat = 2 };
 
 	if (_wcsicmp(fmt, L"FAT") == 0)
 		opt.fmt = FM_FAT | FM_SFD;
@@ -143,10 +144,24 @@ mkfs(const wchar_t* disk, const wchar_t* part, const wchar_t* fmt, const wchar_t
 	if (cluster)
 		opt.au_size = wcstoul(cluster, NULL, 10);
 
-	FRESULT res = f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE);
+	if (f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE) != FR_OK)
+		goto fail;
+
+	if ((opt.fmt & FM_FAT32) || (opt.fmt & FM_FAT))
+	{
+		struct grub_fat_bpb bpb;
+		if (grub_disk_read(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
+			goto fail;
+		bpb.num_hidden_sectors = (grub_uint32_t)grub_partition_get_start(g_ctx.disk->partition);
+		if (grub_disk_write(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
+			goto fail;
+	}
 
 	fatio_unset_disk();
-	return res == FR_OK;
+	return true;
+fail:
+	fatio_unset_disk();
+	return false;
 }
 
 static bool
