@@ -10,6 +10,7 @@
 #include <grub/fs.h>
 #include <grub/err.h>
 #include <grub/partition.h>
+#include <grub/fat.h>
 
 #include "fatfs/ff.h"
 
@@ -47,28 +48,26 @@ callback_enum_disk(const char* name, void* data)
 		grub_disk_close(disk);
 		return 0;
 	}
+
 	grub_errno = GRUB_ERR_NONE;
 	fs = grub_fs_probe(disk);
-	if (fs)
+
+	grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
+	grub_printf("%d\t", disk->partition->number + 1);
+	grub_printf("%s\t", fs ? fs->name : "-");
+	grub_printf("%-10s\t", grub_get_human_size(grub_disk_native_sectors(disk) << GRUB_DISK_SECTOR_BITS, GRUB_HUMAN_SIZE_SHORT));
+
+	if (fs && fs->fs_label)
 	{
-		if (grub_strcmp(fs->name, "fat") == 0 || grub_strcmp(fs->name, "exfat") == 0)
-		{
-			grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
-			grub_printf("%d\t", disk->partition->number + 1);
-			grub_printf("%s\t", fs->name);
-			grub_printf("%-10s\t",
-				grub_get_human_size(grub_disk_native_sectors(disk) << GRUB_DISK_SECTOR_BITS, GRUB_HUMAN_SIZE_SHORT));
-			if (fs->fs_label)
-			{
-				char* label = NULL;
-				fs->fs_label(disk, &label);
-				if (label)
-					grub_printf("%s", label);
-				grub_free(label);
-			}
-			grub_printf("\n");
-		}
+
+		char* label = NULL;
+		fs->fs_label(disk, &label);
+		if (label)
+			grub_printf("%s", label);
+		grub_free(label);
+
 	}
+	grub_printf("\n");
 	grub_disk_close(disk);
 	grub_errno = GRUB_ERR_NONE;
 	return 0;
@@ -120,7 +119,7 @@ mkdir(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
 static bool
 mkfs(const wchar_t* disk, const wchar_t* part, const wchar_t* fmt, const wchar_t* cluster)
 {
-	MKFS_PARM opt = { 0 };
+	MKFS_PARM opt = { .au_size = 0, .align = 8, .n_fat = 2 };
 
 	if (_wcsicmp(fmt, L"FAT") == 0)
 		opt.fmt = FM_FAT | FM_SFD;
@@ -145,10 +144,24 @@ mkfs(const wchar_t* disk, const wchar_t* part, const wchar_t* fmt, const wchar_t
 	if (cluster)
 		opt.au_size = wcstoul(cluster, NULL, 10);
 
-	FRESULT res = f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE);
+	if (f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE) != FR_OK)
+		goto fail;
+
+	if ((opt.fmt & FM_FAT32) || (opt.fmt & FM_FAT))
+	{
+		struct grub_fat_bpb bpb;
+		if (grub_disk_read(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
+			goto fail;
+		bpb.num_hidden_sectors = (grub_uint32_t)grub_partition_get_start(g_ctx.disk->partition);
+		if (grub_disk_write(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
+			goto fail;
+	}
 
 	fatio_unset_disk();
-	return res == FR_OK;
+	return true;
+fail:
+	fatio_unset_disk();
+	return false;
 }
 
 static bool
@@ -377,7 +390,7 @@ wmain(int argc, wchar_t* argv[])
 	}
 	else if (_wcsicmp(argv[1], L"LS") == 0)
 	{
-		if (argc < 4)
+		if (argc < 5)
 			print_help(argv[0]);
 		else
 			list_file(argv[2], argv[3], argv[4]);

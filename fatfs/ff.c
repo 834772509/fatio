@@ -6321,7 +6321,7 @@ FRESULT f_mkfs (
 		sect = b_fat;		/* FAT start sector */
 		for (i = 0; i < n_fat; i++) {			/* Initialize FATs each */
 			if (fsty == FS_FAT32) {
-				st_dword(buf + 0, 0xFFFFFFF8);	/* FAT[0] */
+				st_dword(buf + 0, 0x0FFFFFF8);	/* FAT[0] */
 				st_dword(buf + 4, 0xFFFFFFFF);	/* FAT[1] */
 				st_dword(buf + 8, 0x0FFFFFFF);	/* FAT[2] (root directory) */
 			} else {
