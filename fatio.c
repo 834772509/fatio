@@ -52,6 +52,13 @@ callback_enum_disk(const char* name, void* data)
 	grub_errno = GRUB_ERR_NONE;
 	fs = grub_fs_probe(disk);
 
+	// filter hard drive
+	if (data && grub_strtoul(name + 2, NULL, 10) != wcstoul(data, NULL, 10))
+	{
+		grub_disk_close(disk);
+		return 0;
+	}
+
 	grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
 	grub_printf("%d\t", disk->partition->number + 1);
 	grub_printf("%s\t", fs ? fs->name : "-");
@@ -74,10 +81,10 @@ callback_enum_disk(const char* name, void* data)
 }
 
 static void
-print_list(void)
+print_list(const wchar_t* disk)
 {
 	grub_printf("Disk\tPart\tFS\tSize\t\tLabel\n");
-	grub_disk_iterate(callback_enum_disk, NULL);
+	grub_disk_iterate(callback_enum_disk, disk ? (void*)disk : NULL);
 }
 
 static bool
@@ -303,7 +310,7 @@ wmain(int argc, wchar_t* argv[])
 	if (argc < 2)
 		print_help(argv[0]);
 	else if (_wcsicmp(argv[1], L"LIST") == 0)
-		print_list();
+		print_list(argc > 1 ? argv[2] : NULL);
 	else if (_wcsicmp(argv[1], L"COPY") == 0)
 	{
 		if (argc < 6)
