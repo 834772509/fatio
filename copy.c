@@ -20,6 +20,14 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 		grub_printf("src open failed\n");
 		return false;
 	}
+	// get input file size
+	struct stat stbuf;
+	if (_wstat(in_name, &stbuf) == -1) {
+		grub_printf("Failed to get file size\n");
+		return false;
+	}
+	long long file_size = stbuf.st_size;
+
 	res = f_open(&out, out_name, FA_WRITE | FA_CREATE_ALWAYS);
 	if (res)
 	{
@@ -32,7 +40,7 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 	{
 		// read file
 		br = fread(g_ctx.buffer, 1, BUFFER_SIZE, file);
-		grub_printf("\r%-20s", grub_get_human_size(ofs, GRUB_HUMAN_SIZE_SHORT));
+		loader(((double)ofs / (double)file_size) * 100);
 		ofs += br;
 		if (br == 0)
 		{

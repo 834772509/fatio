@@ -36,6 +36,16 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations.\n");
 }
 
+void loader(int rate)
+{
+	char proc[102];
+	memset(proc, '\0', sizeof(proc));
+	for (int i = 0; i < rate; i++)
+		proc[i] = '=';
+	printf("[%-100s] [%d%%]\r", proc, rate);
+	fflush(stdout);
+}
+
 static int
 callback_enum_disk(const char* name, void* data)
 {

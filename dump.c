@@ -35,7 +35,7 @@ fatio_dump(const wchar_t* in_name, const wchar_t* out_name)
 			grub_printf("read failed %d\n", res);
 			break;
 		}
-		grub_printf("\r%-20s", grub_get_human_size(ofs, GRUB_HUMAN_SIZE_SHORT));
+		loader(((double)ofs / (double)in.obj.objsize) * 100);
 		ofs += br;
 		if (br == 0)
 		{

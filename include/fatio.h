@@ -17,6 +17,8 @@ struct fatio_ctx
 
 extern struct fatio_ctx g_ctx;
 
+void loader(int rate);
+
 void
 fatio_remove_trailing_backslash(wchar_t* path);
 
