@@ -5,7 +5,7 @@
 
 #include <grub/disk.h>
 
-#define BUFFER_SIZE 0x800000 // 8MB
+extern int BUFFER_SIZE;
 
 struct fatio_ctx
 {

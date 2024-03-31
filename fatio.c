@@ -14,12 +14,14 @@
 
 #include "fatfs/ff.h"
 
+int BUFFER_SIZE = 0x2000000; //32MB
+
 static void
 print_help(const wchar_t* prog_name)
 {
-	wprintf(L"Usage: %s Options\n", prog_name);
-	wprintf(L"Options:\n");
-	wprintf(L"\tlist\n\t\tList supported partitions.\n");
+	wprintf(L"Usage: %s Command [Options]\n", prog_name);
+	wprintf(L"Command:\n");
+	wprintf(L"\tlist [Disk]\n\t\tList supported partitions.\n");
 	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
 	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
 	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
@@ -30,6 +32,8 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"\tremove  Disk Part DEST_FILE\n\t\tRemove the file from FAT partition.\n");
 	wprintf(L"\tmove    Disk Part SRC_FILE DEST_FILE\n\t\tRename/move files from FAT partition.\n");
 	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
+	wprintf(L"Options:\n");
+	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations.\n");
 }
 
 static int
@@ -307,6 +311,14 @@ wmain(int argc, wchar_t* argv[])
 	grub_module_init();
 	setlocale(LC_ALL, "chs");
 
+	// parse options
+	for (int i = 0; i < argc; ++i)
+	{
+		if (_wcsicmp(argv[i], L"-b") == 0 && i + 1 < argc)
+			BUFFER_SIZE = _wtoi(argv[i + 1]) * 1024;
+	}
+
+	// parse cmdline
 	if (argc < 2)
 		print_help(argv[0]);
 	else if (_wcsicmp(argv[1], L"LIST") == 0)
