@@ -102,19 +102,37 @@ copy_folder(const wchar_t* in_name, const wchar_t* out_name)
 	return true;
 }
 
+wchar_t* get_file_name(const wchar_t* path) {
+	const wchar_t* fileName = wcsrchr(path, L'/');
+	if (fileName == NULL)
+		fileName = wcsrchr(path, L'\\');
+	return _wcsdup((fileName != NULL) ? fileName + 1 : path);
+}
+
 bool
 fatio_copy(const wchar_t* in_name, const wchar_t* out_name)
 {
-	struct stat stbuf;
-	if (_wstat(in_name, &stbuf) == -1) {
+	struct stat instbuf;
+	struct stat outstbuf;
+	wchar_t out_path[256];
+
+	if (_wstat(in_name, &instbuf) == -1) {
 		return false;
 	}
-	if (S_ISDIR(stbuf.st_mode)) {
+	if (_wstat(out_name, &outstbuf) == -1) {
+		return false;
+	}
+	if (S_ISDIR(instbuf.st_mode)) {
 		return copy_folder(in_name, out_name);
 	}
-	else if (S_ISREG(stbuf.st_mode)) {
-		return copy_file(in_name, out_name);
+	else if (S_ISREG(instbuf.st_mode)) {
+		if (S_ISDIR(outstbuf.st_mode)) {
+			swprintf(out_path, sizeof(out_path) / sizeof(out_path[0]), L"%ls%ls", out_name, get_file_name(in_name));
+			return copy_file(in_name, out_path);
+		}
+		else {
+			return copy_file(in_name, out_name);
+		}
 	}
-
 	return false;
 }
