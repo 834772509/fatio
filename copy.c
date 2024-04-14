@@ -21,7 +21,7 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 		return false;
 	}
 	// get input file size
-	struct stat stbuf;
+	struct _stat stbuf;
 	if (_wstat(in_name, &stbuf) == -1) {
 		grub_printf("Failed to get file size\n");
 		return false;
@@ -74,7 +74,7 @@ copy_folder(const wchar_t* in_name, const wchar_t* out_name)
 
 	struct wdirent* ent;
 	while ((ent = wreaddir(dir)) != NULL) {
-		struct stat stbuf;
+		struct _stat stbuf;
 		wchar_t new_path[256];
 		wchar_t out_path[256];
 
@@ -112,8 +112,8 @@ wchar_t* get_file_name(const wchar_t* path) {
 bool
 fatio_copy(const wchar_t* in_name, const wchar_t* out_name)
 {
-	struct stat instbuf;
-	struct stat outstbuf;
+	struct _stat instbuf;
+	struct _stat outstbuf;
 	wchar_t out_path[256];
 
 	if (_wstat(in_name, &instbuf) == -1) {
