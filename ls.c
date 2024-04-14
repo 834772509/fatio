@@ -57,7 +57,7 @@ FRESULT list_dir(const wchar_t* path)
 				ndir++;
 			}
 			else {										   /* File */
-				wprintf(L"%-10s %-10s%-25s%-15d%s\n", formatDateFromFdate(fno.fdate), formatTimeFromFtime(fno.ftime), getAttributes(fno.fattrib), fno.fsize, fno.fname);
+				wprintf(L"%-10s %-10s%-25s%-15llu%s\n", formatDateFromFdate(fno.fdate), formatTimeFromFtime(fno.ftime), getAttributes(fno.fattrib), fno.fsize, fno.fname);
 				nfile++;
 			}
 		}
