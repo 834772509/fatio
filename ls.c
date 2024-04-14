@@ -9,7 +9,7 @@ wchar_t* formatDateFromFdate(WORD fdate) {
 	int month = (fdate >> 5) & 0xF;
 	int day = fdate & 0x1F;
 
-	wchar_t* formattedDate = (wchar_t*)malloc(11);  // "YYYY-MM-DD\0"
+	static wchar_t formattedDate[11];  // "YYYY-MM-DD\0"
 	swprintf(formattedDate, 11, L"%04d-%02d-%02d", year, month, day);
 	return formattedDate;
 }
@@ -19,13 +19,13 @@ wchar_t* formatTimeFromFtime(WORD ftime) {
 	int minute = (ftime >> 5) & 0x3F;
 	int second = (ftime & 0x1F) * 2;
 
-	wchar_t* formattedTime = (wchar_t*)malloc(6);  // "HH:MM\0"
+	static wchar_t formattedTime[6];  // "HH:MM\0"
 	swprintf(formattedTime, 6, L"%02d:%02d", hour, minute);
 	return formattedTime;
 }
 
 wchar_t* getAttributes(BYTE fattrib) {
-	wchar_t* attributes = (wchar_t*)malloc(100);
+	static wchar_t attributes[100];
 	swprintf(attributes, 100, L"%s%s%s%s%s%s",
 		(fattrib & AM_RDO) ? L"Read-only " : L"",
 		(fattrib & AM_HID) ? L"Hidden " : L"",
