@@ -95,10 +95,10 @@ callback_enum_disk(const char* name, void* data)
 }
 
 static void
-print_list(const wchar_t* disk)
+print_list(wchar_t* disk)
 {
 	grub_printf("Disk\tPart\tFS\tSize\t\tLabel\n");
-	grub_disk_iterate(callback_enum_disk, disk ? (void*)disk : NULL);
+	grub_disk_iterate(callback_enum_disk, disk);
 }
 
 static bool
