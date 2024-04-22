@@ -51,3 +51,6 @@ fatio_move(const wchar_t* in_name, const wchar_t* out_name);
 
 bool
 fatio_cat(const wchar_t* path);
+
+bool
+fatio_chmod(const wchar_t* path);

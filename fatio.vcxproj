@@ -200,6 +200,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cat.c" />
+    <ClCompile Include="chmod.c" />
     <ClCompile Include="ctx.c" />
     <ClCompile Include="move.c" />
     <ClCompile Include="remove.c" />

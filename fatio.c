@@ -21,7 +21,7 @@ print_help(const wchar_t* prog_name)
 {
 	wprintf(L"Usage: %s Command [Options]\n", prog_name);
 	wprintf(L"Command:\n");
-	wprintf(L"\tlist [Disk]\n\t\tList supported partitions.\n");
+	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n");
 	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
 	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
 	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
@@ -31,9 +31,10 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"\tdump    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file from FAT partition.\n");
 	wprintf(L"\tremove  Disk Part DEST_FILE\n\t\tRemove the file from FAT partition.\n");
 	wprintf(L"\tmove    Disk Part SRC_FILE DEST_FILE\n\t\tRename/move files from FAT partition.\n");
+	wprintf(L"\tchmod   Disk Part DEST_FILE [+/-A] [+/-H] [+/-R] [+/-S]\n\t\tChange file attributes for files on a FAT partition.\n\t\tAttributes: A - Archive, R - Read Only, S - System, H - Hidden\n");
 	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
 	wprintf(L"Options:\n");
-	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations.\n");
+	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
 
 void loader(int rate)
@@ -315,6 +316,24 @@ cat_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
 	return ret;
 }
 
+static bool
+chmod_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst, const wchar_t* attributes[])
+{
+	FATFS fs;
+	unsigned long disk_id = wcstoul(disk, NULL, 10);
+	unsigned long part_id = wcstoul(part, NULL, 10);
+	if (!fatio_set_disk(disk_id, part_id))
+	{
+		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+		return false;
+	}
+	f_mount(&fs, L"0:", 0);
+	bool ret = fatio_chmod(dst, attributes);
+	f_unmount(L"0:");
+	fatio_unset_disk();
+	return ret;
+}
+
 int
 wmain(int argc, wchar_t* argv[])
 {
@@ -442,6 +461,22 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 			cat_file(argv[2], argv[3], argv[4]);
+	}
+	else if (_wcsicmp(argv[1], L"CHMOD") == 0)
+	{
+		if (argc < 5)
+			print_help(argv[0]);
+		else {
+			const wchar_t* attributes[4];
+			for (int i = 0; i < argc - 4; ++i) {
+				attributes[i] = argv[i + 5];
+			}
+			attributes[argc - 4] = NULL;
+			if(chmod_file(argv[2], argv[3], argv[4], attributes))
+				grub_printf("File chmod successfully\n");
+			else
+				grub_printf("Failed chmod file\n");
+		}
 	}
 	else
 		print_help(argv[0]);
