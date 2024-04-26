@@ -17,6 +17,11 @@ struct fatio_ctx
 
 extern struct fatio_ctx g_ctx;
 
+typedef struct {
+	wchar_t* disk;
+	bool show_all_hard_drive;
+} callback_enum_disk_data;
+
 void loader(int rate);
 
 void

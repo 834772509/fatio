@@ -21,7 +21,7 @@ print_help(const wchar_t* prog_name)
 {
 	wprintf(L"Usage: %s Command [Options]\n", prog_name);
 	wprintf(L"Command:\n");
-	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n");
+	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n\t\tOptions: -a list all partitions");
 	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
 	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
 	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
@@ -52,6 +52,7 @@ callback_enum_disk(const char* name, void* data)
 {
 	grub_disk_t disk = NULL;
 	grub_fs_t fs = NULL;
+	callback_enum_disk_data* callback_data = (callback_enum_disk_data*)data;
 
 	grub_errno = GRUB_ERR_NONE;
 	disk = grub_disk_open(name);
@@ -68,10 +69,19 @@ callback_enum_disk(const char* name, void* data)
 	fs = grub_fs_probe(disk);
 
 	// filter hard drive
-	if (data && grub_strtoul(name + 2, NULL, 10) != wcstoul(data, NULL, 10))
+	if (callback_data && callback_data->disk != NULL && grub_strtoul(name + 2, NULL, 10) != wcstoul(callback_data->disk, NULL, 10))
 	{
 		grub_disk_close(disk);
 		return 0;
+	}
+
+	// filter file system
+	if (callback_data && callback_data->show_all_hard_drive == false) {
+		if (!fs || (grub_strcmp(fs->name, "fat") == 0 && grub_strcmp(fs->name, "exfat") == 0))
+		{
+			grub_disk_close(disk);
+			return 0;
+		}
 	}
 
 	grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
@@ -96,10 +106,10 @@ callback_enum_disk(const char* name, void* data)
 }
 
 static void
-print_list(wchar_t* disk)
+print_list(wchar_t* disk, bool show_all_hard_drive)
 {
 	grub_printf("Disk\tPart\tFS\tSize\t\tLabel\n");
-	grub_disk_iterate(callback_enum_disk, disk);
+	grub_disk_iterate(callback_enum_disk, &(callback_enum_disk_data) { disk, show_all_hard_drive });
 }
 
 static bool
@@ -351,7 +361,23 @@ wmain(int argc, wchar_t* argv[])
 	if (argc < 2)
 		print_help(argv[0]);
 	else if (_wcsicmp(argv[1], L"LIST") == 0)
-		print_list(argc > 1 ? argv[2] : NULL);
+	{
+		wchar_t* disk = NULL;
+		bool list_all = false;
+
+		for (int i = 2; i < argc; ++i)
+		{
+			if (argv[i][0] == L'-')
+			{
+				if (_wcsicmp(argv[i], L"-a") == 0)
+					list_all = true;
+			}
+			else
+				disk = argv[i];
+		}
+		print_list(disk, list_all);
+	}
+
 	else if (_wcsicmp(argv[1], L"COPY") == 0)
 	{
 		if (argc < 6)
@@ -472,7 +498,7 @@ wmain(int argc, wchar_t* argv[])
 				attributes[i] = argv[i + 5];
 			}
 			attributes[argc - 4] = NULL;
-			if(chmod_file(argv[2], argv[3], argv[4], attributes))
+			if (chmod_file(argv[2], argv[3], argv[4], attributes))
 				grub_printf("File chmod successfully\n");
 			else
 				grub_printf("Failed chmod file\n");
