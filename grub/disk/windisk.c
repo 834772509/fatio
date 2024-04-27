@@ -22,6 +22,18 @@
 #include <intsafe.h>
 #include <setupapi.h>
 
+typedef struct
+{
+	DWORD  cbSize;
+	WCHAR  DevicePath[512];
+} MY_DEVIF_DETAIL_DATA;
+
+static struct
+{
+	DWORD count; // drive count
+	DWORD* list; // list of drive ids
+} cached_hd_data;
+
 static BOOL
 get_drive_id(const char* name, DWORD* drive)
 {
@@ -71,12 +83,6 @@ hd_call_hook(grub_disk_dev_iterate_hook_t hook, void* hook_data, DWORD drive)
 	return hook(name, hook_data);
 }
 
-typedef struct
-{
-	DWORD  cbSize;
-	WCHAR  DevicePath[512];
-} MY_DEVIF_DETAIL_DATA;
-
 static int
 windisk_iterate(grub_disk_dev_iterate_hook_t hook, void* hook_data, grub_disk_pull_t pull)
 {
@@ -85,37 +91,11 @@ windisk_iterate(grub_disk_dev_iterate_hook_t hook, void* hook_data, grub_disk_pu
 	case GRUB_DISK_PULL_NONE:
 	{
 		DWORD index = 0;
-		SP_DEVICE_INTERFACE_DATA sdid = { .cbSize = sizeof(SP_DEVICE_INTERFACE_DATA) };
-		MY_DEVIF_DETAIL_DATA mddd = { .cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W) };
-		SP_DEVINFO_DATA sdd = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-		GUID guid = GUID_DEVINTERFACE_DISK;
-		HDEVINFO dev_info = SetupDiGetClassDevsW(&guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-		if (dev_info == INVALID_HANDLE_VALUE)
-			return 0;
-		for (index = 0; SetupDiEnumDeviceInterfaces(dev_info, NULL, &guid, index, &sdid); index++)
+		for (index = 0; index < cached_hd_data.count; index++)
 		{
-			if (SetupDiGetDeviceInterfaceDetailW(dev_info, &sdid, (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)&mddd,
-				sizeof(MY_DEVIF_DETAIL_DATA), NULL, &sdd))
-			{
-				BOOL rc = FALSE;
-				DWORD bufsz;
-				STORAGE_DEVICE_NUMBER sdn = { 0 };
-				HANDLE disk = CreateFileW(mddd.DevicePath,
-					GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-					NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-				if (disk == INVALID_HANDLE_VALUE || disk == NULL)
-					continue;
-				rc = DeviceIoControl(disk, IOCTL_STORAGE_GET_DEVICE_NUMBER,
-					NULL, 0, &sdn, (DWORD)(sizeof(STORAGE_DEVICE_NUMBER)),
-					&bufsz, NULL);
-				CloseHandle(disk);
-				if (rc == FALSE)
-					continue;
-				if (hd_call_hook(hook, hook_data, sdn.DeviceNumber))
-					return 1;
-			}
+			if (hd_call_hook(hook, hook_data, cached_hd_data.list[index]))
+				return 1;
 		}
-		SetupDiDestroyDeviceInfoList(dev_info);
 		return 0;
 	}
 	case GRUB_DISK_PULL_REMOVABLE:
@@ -212,12 +192,69 @@ static struct grub_disk_dev grub_windisk_dev =
 	.next = 0
 };
 
+static int __cdecl compare_disk_id(const void* a, const void* b)
+{
+	return ((int)*(const DWORD*)a) - (int)(*(const DWORD*)b);
+}
+
 GRUB_MOD_INIT(windisk)
 {
+	grub_memset(&cached_hd_data, 0, sizeof(cached_hd_data));
 	grub_disk_dev_register(&grub_windisk_dev);
+
+	DWORD index, count;
+	SP_DEVICE_INTERFACE_DATA sdid = { .cbSize = sizeof(SP_DEVICE_INTERFACE_DATA) };
+	MY_DEVIF_DETAIL_DATA mddd = { .cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W) };
+	SP_DEVINFO_DATA sdd = { .cbSize = sizeof(SP_DEVINFO_DATA) };
+	GUID guid = GUID_DEVINTERFACE_DISK;
+	HDEVINFO dev_info = SetupDiGetClassDevsW(&guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (dev_info == INVALID_HANDLE_VALUE)
+		return;
+
+	// get disk count
+	for (count = 0; SetupDiEnumDeviceInterfaces(dev_info, NULL, &guid, count, &sdid); count++)
+		;
+	if (count == 0)
+		return;
+	cached_hd_data.list = grub_calloc(count, sizeof(DWORD));
+	if (cached_hd_data.list == NULL)
+		return;
+
+	// fill disk list
+	for (index = 0; SetupDiEnumDeviceInterfaces(dev_info, NULL, &guid, index, &sdid); index++)
+	{
+		if (cached_hd_data.count >= count) // should not happen
+			break;
+		if (SetupDiGetDeviceInterfaceDetailW(dev_info, &sdid, (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)&mddd,
+			sizeof(MY_DEVIF_DETAIL_DATA), NULL, &sdd))
+		{
+			BOOL rc = FALSE;
+			DWORD bufsz;
+			STORAGE_DEVICE_NUMBER sdn = { 0 };
+			HANDLE disk = CreateFileW(mddd.DevicePath,
+				GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+				NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (disk == INVALID_HANDLE_VALUE || disk == NULL)
+				continue;
+			rc = DeviceIoControl(disk, IOCTL_STORAGE_GET_DEVICE_NUMBER,
+				NULL, 0, &sdn, (DWORD)(sizeof(STORAGE_DEVICE_NUMBER)),
+				&bufsz, NULL);
+			CloseHandle(disk);
+			if (rc == FALSE)
+				continue;
+			cached_hd_data.list[cached_hd_data.count] = sdn.DeviceNumber;
+			cached_hd_data.count++;
+		}
+	}
+	SetupDiDestroyDeviceInfoList(dev_info);
+
+	// sort disk id
+	qsort(cached_hd_data.list, cached_hd_data.count, sizeof(DWORD), compare_disk_id);
 }
 
 GRUB_MOD_FINI(windisk)
 {
+	grub_free(cached_hd_data.list);
+	grub_memset(&cached_hd_data, 0, sizeof(cached_hd_data));
 	grub_disk_dev_unregister(&grub_windisk_dev);
 }
