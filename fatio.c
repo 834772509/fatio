@@ -21,7 +21,7 @@ print_help(const wchar_t* prog_name)
 {
 	wprintf(L"Usage: %s Command [Options]\n", prog_name);
 	wprintf(L"Command:\n");
-	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n\t\tOptions: -a list all partitions");
+	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n\t\tOptions:\n\t\t\t -a\tShow all partitions.\n");
 	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
 	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
 	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
