@@ -15,6 +15,7 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 	UINT64 ofs = 0;
 	FIL out;
 	FILE* file = 0;
+	struct _stat stbuf;
 
 	// open input file
 	if (_wfopen_s(&file, in_name, L"rb") != 0)
@@ -24,7 +25,6 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 	}
 
 	// get input file size
-	struct _stat stbuf;
 	if (_wstat(in_name, &stbuf) == -1)
 	{
 		grub_printf("Failed to get file size\n");
@@ -52,8 +52,8 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 		loader(file_size == 0 ? 100 : ((double)ofs / (double)file_size) * 100);
 	}
 	grub_printf("\n");
-	fclose(file);
 	f_close(&out);
+	fclose(file);
 
 	return br == 0;
 }
@@ -63,6 +63,7 @@ copy_folder(const wchar_t* in_name, const wchar_t* out_name)
 {
 	_WDIR* dir = wopendir(in_name);
 	struct _stat stbuf;
+	struct wdirent* ent;
 	wchar_t new_path[MAX_PATH];
 	wchar_t out_path[MAX_PATH];
 
@@ -72,9 +73,10 @@ copy_folder(const wchar_t* in_name, const wchar_t* out_name)
 		return false;
 	}
 
-	f_mkdir(out_name);
+	FRESULT out_stat = f_stat(out_name, NULL);
+	if (out_stat == FR_NO_PATH || out_stat == FR_NO_FILE)
+		f_mkdir(out_name);
 
-	struct wdirent* ent;
 	while ((ent = wreaddir(dir)) != NULL)
 	{
 		if (wcscmp(ent->d_name, L".") == 0 || wcscmp(ent->d_name, L"..") == 0)
@@ -86,10 +88,7 @@ copy_folder(const wchar_t* in_name, const wchar_t* out_name)
 		if (_wstat(new_path, &stbuf) == -1)
 			continue;
 		if (S_ISDIR(stbuf.st_mode))
-		{
-			f_mkdir(out_path);
 			copy_folder(new_path, out_path);
-		}
 		else if (S_ISREG(stbuf.st_mode))
 			copy_file(new_path, out_path);
 	}
