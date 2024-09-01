@@ -16,21 +16,14 @@ fatio_chmod(const wchar_t* path, const wchar_t* attributes[])
         else if (attributes[i][0] == L'-')
             target_attribute = &del_attribute;
         if (target_attribute != NULL) {
-            switch (attributes[i][1]) {
-                case L'A':
-                    *target_attribute |= AM_ARC;
-                    break;
-                case L'H':
-                    *target_attribute |= AM_HID;
-                    break;
-                case L'R':
-                    *target_attribute |= AM_RDO;
-                    break;
-                case L'S':
-                    *target_attribute |= AM_SYS;
-                    break;
-                default:
-                    break;
+            if (_wcsicmp(&attributes[i][1], L"A") == 0) {
+                *target_attribute |= AM_ARC;
+            } else if (_wcsicmp(&attributes[i][1], L"H") == 0) {
+                *target_attribute |= AM_HID;
+            } else if (_wcsicmp(&attributes[i][1], L"R") == 0) {
+                *target_attribute |= AM_RDO;
+            } else if (_wcsicmp(&attributes[i][1], L"S") == 0) {
+                *target_attribute |= AM_SYS;
             }
         }
     }
