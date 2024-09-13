@@ -106,3 +106,20 @@ fatio.exe dump Disk Part Src_File Dest_File
 fatio.exe dump 1 2 text.txt D:\text.txt
 fatio.exe dump 1 2 \dir\text.txt D:\text.txt
 ```
+
+### Chmod
+
+Change file attributes for files on a FAT partition.
+
+| Attributes | Description |
+|------------|-------------|
+| A          | Archive     |
+| R          | Read Only   |
+| S          | System      |
+| H          | Hidden      |
+
+```shell
+fatio.exe chmod Disk Part File [+/-A] [+/-H] [+/-R] [+/-S]
+# Examples:
+fatio.exe chmod 1 2 text.txt +A +H +R
+```
