@@ -34,7 +34,7 @@ void
 fatio_unset_disk(void);
 
 bool
-fatio_copy(const wchar_t* in_name, const wchar_t* out_name);
+fatio_copy(const wchar_t* in_name, const wchar_t* out_name, bool update);
 
 bool
 fatio_mkdir(const wchar_t* path);

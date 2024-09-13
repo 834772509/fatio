@@ -3,11 +3,13 @@
 #include <wchar.h>
 #include <io.h>
 #include <dirent.h>
+#include <time.h>
+#include <math.h>
 
 #include "fatfs/ff.h"
 
 bool
-copy_file(const wchar_t* in_name, const wchar_t* out_name)
+copy_file(const wchar_t* in_name, const wchar_t* out_name, bool update)
 {
 	bool rc = FALSE;
 	FRESULT res;
@@ -16,6 +18,7 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 	FIL out;
 	FILE* file = 0;
 	struct _stat stbuf;
+	FILINFO out_info;
 
 	// open input file
 	if (_wfopen_s(&file, in_name, L"rb") != 0)
@@ -31,6 +34,21 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 		return false;
 	}
 	long long file_size = stbuf.st_size;
+
+	// check if file can be skipped
+	if (update && f_stat(out_name, &out_info) == FR_OK)
+	{
+		time_t fatTimestamp = ((out_info.fdate >> 9) + 1980 - 1970) * 31536000L + ((out_info.fdate >> 5) & 15) * 2592000L + (out_info.fdate & 31) * 86400L + (out_info.ftime >> 11) * 3600L + ((out_info.ftime >> 5) & 63) * 60L + (out_info.ftime & 31) * 2L;
+
+		struct tm* file_time_utc = gmtime(&stbuf.st_mtime);
+		struct tm* fat_time_utc = gmtime(&fatTimestamp);
+
+		time_t file_time_utc_ts = mktime(file_time_utc);
+		time_t fat_time_utc_ts = mktime(fat_time_utc);
+
+		if (out_info.fsize == file_size && fabs(file_time_utc_ts - fat_time_utc_ts)<=2)
+			return true;
+	}
 
 	// open output file
 	res = f_open(&out, out_name, FA_WRITE | FA_CREATE_ALWAYS);
@@ -59,7 +77,7 @@ copy_file(const wchar_t* in_name, const wchar_t* out_name)
 }
 
 bool
-copy_folder(const wchar_t* in_name, const wchar_t* out_name)
+copy_folder(const wchar_t* in_name, const wchar_t* out_name, bool update)
 {
 	_WDIR* dir = wopendir(in_name);
 	struct _stat stbuf;
@@ -88,9 +106,9 @@ copy_folder(const wchar_t* in_name, const wchar_t* out_name)
 		if (_wstat(new_path, &stbuf) == -1)
 			continue;
 		if (S_ISDIR(stbuf.st_mode))
-			copy_folder(new_path, out_path);
+			copy_folder(new_path, out_path, update);
 		else if (S_ISREG(stbuf.st_mode))
-			copy_file(new_path, out_path);
+			copy_file(new_path, out_path, update);
 	}
 	wclosedir(dir);
 	return true;
@@ -105,7 +123,7 @@ get_file_name(const wchar_t* path) {
 }
 
 bool
-fatio_copy(const wchar_t* in_name, const wchar_t* out_name)
+fatio_copy(const wchar_t* in_name, const wchar_t* out_name, bool update)
 {
 	struct _stat instbuf;
 	wchar_t out_path[MAX_PATH];
@@ -116,14 +134,14 @@ fatio_copy(const wchar_t* in_name, const wchar_t* out_name)
 		return false;
 	}
 	if (S_ISDIR(instbuf.st_mode))
-		return copy_folder(in_name, out_name);
+		return copy_folder(in_name, out_name, update);
 	else if (S_ISREG(instbuf.st_mode))
 	{
 		if (wcscmp(out_name, L"\\") == 0)
 			swprintf(out_path, sizeof(out_path) / sizeof(out_path[0]), L"\\%ls", get_file_name(in_name));
 		else
 			swprintf(out_path, sizeof(out_path) / sizeof(out_path[0]), L"%ls\\%ls", out_name, get_file_name(in_name));
-		return copy_file(in_name, out_path);
+		return copy_file(in_name, out_path, update);
 	}
 	return false;
 }

@@ -113,7 +113,7 @@ print_list(wchar_t* disk, bool show_all_hard_drive)
 }
 
 static bool
-copy_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wchar_t* dst)
+copy_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wchar_t* dst, bool update)
 {
 	FATFS fs;
 	unsigned long disk_id = wcstoul(disk, NULL, 10);
@@ -124,7 +124,7 @@ copy_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wc
 		return false;
 	}
 	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_copy(src, dst);
+	bool ret = fatio_copy(src, dst, update);
 	f_unmount(L"0:");
 	fatio_unset_disk();
 	return ret;
@@ -384,7 +384,13 @@ wmain(int argc, wchar_t* argv[])
 			print_help(argv[0]);
 		else
 		{
-			if (copy_file(argv[2], argv[3], argv[4], argv[5]))
+			bool update = false;
+			for (int i = 2; i < argc; ++i)
+			{
+				if (_wcsicmp(argv[i], L"-u") == 0)
+					update = true;
+			}
+			if (copy_file(argv[2], argv[3], argv[4], argv[5], update))
 				grub_printf("File copy successfully\n");
 			else
 				grub_printf("Failed to copy file\n");
