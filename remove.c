@@ -27,6 +27,7 @@ FRESULT remove_files(const wchar_t* path)
             else                                           /* It is a file. */
             {
                 swprintf(new_path, sizeof(new_path) / sizeof(new_path[0]), L"%s\\%s", path, fno.fname);
+                f_chmod(new_path, 0, AM_HID);
                 f_unlink(new_path);
             }
         }
