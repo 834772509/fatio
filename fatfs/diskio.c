@@ -13,7 +13,8 @@
 #include "diskio.h"		/* Declarations of disk functions */
 
 #include <fatio.h>
-#include <grub/datetime.h>
+#include <locale.h>
+
 
 /*-----------------------------------------------------------------------*/
 /* Get Drive Status                                                      */
@@ -125,48 +126,13 @@ DRESULT disk_ioctl (
 	return RES_PARERR;
 }
 
-void get_local_time(struct grub_datetime* tm)
-{
-	grub_get_datetime(tm);
-
-	/* Convert UTC time to local time (CST), by adding 8 hours */
-	tm->hour += 8;
-
-	/* Handle the case where the hour exceeds 24 */
-	if (tm->hour >= 24)
-	{
-		tm->hour -= 24;
-		tm->day += 1;
-
-		/* Handle the case of month overflow */
-		int days_in_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-		if ((tm->year % 4 == 0 && tm->year % 100 != 0) || (tm->year % 400 == 0)) {
-			days_in_month[1] = 29;  // February has 29 days in a leap year
-		}
-
-		if (tm->day > days_in_month[tm->month - 1]) {
-			tm->day = 1;
-			tm->month += 1;
-
-			/* Handle the case of year overflow */
-			if (tm->month > 12) {
-				tm->month = 1;
-				tm->year += 1;
-			}
-		}
-	}
-}
-
 DWORD get_fattime(void)
 {
-	struct grub_datetime tm;
-	get_local_time(&tm);
+	SYSTEMTIME tm;
+
+	/* Get local time */
+	GetLocalTime(&tm);
 
 	/* Pack date and time into a DWORD variable */
-	return ((DWORD)(tm.year - 1980) << 25)
-		| ((DWORD)tm.month << 21)
-		| ((DWORD)tm.day << 16)
-		| (WORD)(tm.hour << 11)
-		| (WORD)(tm.minute << 5)
-		| (WORD)(tm.second >> 1);
+	return   (tm.wYear - 1980) << 25 | tm.wMonth << 21 | tm.wDay << 16 | tm.wHour << 11 | tm.wMinute << 5 | tm.wSecond >> 1;
 }
