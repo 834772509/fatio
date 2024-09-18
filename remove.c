@@ -27,11 +27,12 @@ FRESULT remove_files(const wchar_t* path)
             else                                           /* It is a file. */
             {
                 swprintf(new_path, sizeof(new_path) / sizeof(new_path[0]), L"%s\\%s", path, fno.fname);
-                f_chmod(new_path, 0, AM_HID);
-                f_unlink(new_path);
+                f_chmod(new_path, 0, AM_RDO);
+                res = f_unlink(new_path);
             }
         }
         f_closedir(&dir);
+        f_chmod(new_path, 0, AM_RDO);
         f_unlink(path);
     }
 
@@ -54,6 +55,7 @@ fatio_remove(const wchar_t* path)
     }
     else
     {
+        f_chmod(path, 0, AM_RDO);
         rc = f_unlink(path);
         if (rc == FR_OK || rc == FR_EXIST)
             return true;
