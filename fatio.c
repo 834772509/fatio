@@ -344,6 +344,15 @@ chmod_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst, const w
 	return ret;
 }
 
+static bool
+write_mbr(const wchar_t* disk, const wchar_t* in_name)
+{
+	FATFS fs;
+	unsigned long disk_id = wcstoul(disk, NULL, 10);
+	bool ret = fatio_write_mbr(disk_id, in_name);
+	return ret;
+}
+
 int
 wmain(int argc, wchar_t* argv[])
 {
@@ -509,6 +518,16 @@ wmain(int argc, wchar_t* argv[])
 			else
 				grub_printf("Failed chmod file\n");
 		}
+	}
+	else if (_wcsicmp(argv[1], L"WRITEMBR") == 0)
+	{
+		if (argc < 3)
+			print_help(argv[0]);
+		else
+			if (write_mbr(argv[2], argv[3]))
+				grub_printf("MBR write successfully\n");
+			else
+				grub_printf("Failed write MBR\n");
 	}
 	else
 		print_help(argv[0]);

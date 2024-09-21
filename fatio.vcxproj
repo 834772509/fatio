@@ -244,6 +244,7 @@
     <ClCompile Include="grub\partmap\msdos.c" />
     <ClCompile Include="ls.c" />
     <ClCompile Include="mkdir.c" />
+    <ClCompile Include="writembr.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h" />
@@ -276,6 +277,7 @@
     <ClInclude Include="include\grub\udf.h" />
     <ClInclude Include="include\loopback.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="writembr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

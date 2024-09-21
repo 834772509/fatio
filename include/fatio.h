@@ -59,3 +59,6 @@ fatio_cat(const wchar_t* path);
 
 bool
 fatio_chmod(const wchar_t* path);
+
+bool
+fatio_write_mbr(const unsigned disk, const wchar_t* in_name);

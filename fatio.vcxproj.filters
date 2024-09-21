@@ -162,6 +162,9 @@
     <ClCompile Include="chmod.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="writembr.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h">
@@ -252,6 +255,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="writembr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
