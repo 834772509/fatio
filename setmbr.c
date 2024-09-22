@@ -2,12 +2,12 @@
 #include <fatio.h>
 #include <wchar.h>
 
-#include "writembr.h"
+#include "setmbr.h"
 #include "fatfs/ff.h"
 #include "fatfs/diskio.h"
 
 bool
-fatio_write_mbr(unsigned disk_id, const wchar_t* in_name)
+fatio_setmbr(unsigned disk_id, const wchar_t* in_name)
 {
 	int rc = 0;
 
@@ -24,7 +24,6 @@ fatio_write_mbr(unsigned disk_id, const wchar_t* in_name)
 		return false;
 	}
 
-	// set disk mbr byte
 	if (_wcsicmp(in_name, L"--empty") == 0)
 	{
 		size_t buffer_size = sizeof(empty_mbr);

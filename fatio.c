@@ -33,6 +33,7 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"\tmove    Disk Part SRC_FILE DEST_FILE\n\t\tRename/move files from FAT partition.\n");
 	wprintf(L"\tchmod   Disk Part DEST_FILE [+/-A] [+/-H] [+/-R] [+/-S]\n\t\tChange file attributes for files on a FAT partition.\n\t\tAttributes: A - Archive, R - Read Only, S - System, H - Hidden\n");
 	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
+	wprintf(L"\tsetmbr  Disk [--MBR_TYPE] [DEST_FILE]\n\t\tWrite MBR to FAT partition.\n\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus\n");
 	wprintf(L"Options:\n");
 	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
@@ -349,7 +350,7 @@ write_mbr(const wchar_t* disk, const wchar_t* in_name)
 {
 	FATFS fs;
 	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	bool ret = fatio_write_mbr(disk_id, in_name);
+	bool ret = fatio_setmbr(disk_id, in_name);
 	return ret;
 }
 
@@ -519,7 +520,7 @@ wmain(int argc, wchar_t* argv[])
 				grub_printf("Failed chmod file\n");
 		}
 	}
-	else if (_wcsicmp(argv[1], L"WRITEMBR") == 0)
+	else if (_wcsicmp(argv[1], L"SETMBR") == 0)
 	{
 		if (argc < 3)
 			print_help(argv[0]);

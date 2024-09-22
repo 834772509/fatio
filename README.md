@@ -123,3 +123,15 @@ fatio.exe chmod Disk Part File [+/-A] [+/-H] [+/-R] [+/-S]
 # Examples:
 fatio.exe chmod 1 2 text.txt +A +H +R
 ```
+### Setmbr
+
+Set disk MBR，support types: empty, nt5, nt6, grub4dos, ultraiso, rufus.
+
+```shell
+fatio.exe setmbr Disk [--MBR_TYPE] [DEST_FILE]
+# Examples:
+fatio.exe setmbr 1 --nt6
+fatio.exe setmbr 1 --grub4dos
+# custom mbr file
+fatio.exe setmbr 1 D:\mbr.bin
+```

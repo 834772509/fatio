@@ -162,7 +162,7 @@
     <ClCompile Include="chmod.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="writembr.c">
+    <ClCompile Include="setmbr.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -257,7 +257,7 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="writembr.h">
+    <ClInclude Include="setmbr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
