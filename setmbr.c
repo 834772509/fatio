@@ -7,7 +7,7 @@
 #include "fatfs/diskio.h"
 
 bool
-fatio_setmbr(unsigned disk_id, const wchar_t* in_name)
+fatio_setmbr(unsigned disk_id, const wchar_t* in_name, bool keep)
 {
 	int rc = 0;
 
@@ -92,6 +92,10 @@ fatio_setmbr(unsigned disk_id, const wchar_t* in_name)
 		BYTE* buffer = grub_malloc(file_size);
 		fread(buffer, 1, file_size, file);
 		fclose(file);
+
+		if (keep) {
+			grub_disk_read(disk, 0, 0x1b8, 0x1fe - 0x1b8, buffer + 0x1b8);
+		}
 
 		rc = grub_disk_write(disk, 0, 0, file_size, buffer);
 	}

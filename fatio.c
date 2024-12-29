@@ -23,7 +23,7 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"Command:\n");
 	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n\t\tOptions:\n\t\t\t -a\tShow all partitions.\n");
 	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
-	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n");
+	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n\t\tOptions:\n\t\t\t -y\tUpdate mode, copy only when the source file is inconsistent.\n");
 	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
 	wprintf(L"\tmkfs    Disk Part FORMAT [CLUSTER_SIZE]\n\t\tCreate an FAT/exFAT volume.\n\t\tSupported format options: FAT, FAT32, EXFAT.\n");
 	wprintf(L"\tlabel   Disk Part [STRING]\n\t\tSet/remove the label of a volume.\n");
@@ -33,7 +33,7 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"\tmove    Disk Part SRC_FILE DEST_FILE\n\t\tRename/move files from FAT partition.\n");
 	wprintf(L"\tchmod   Disk Part DEST_FILE [+/-A] [+/-H] [+/-R] [+/-S]\n\t\tChange file attributes for files on a FAT partition.\n\t\tAttributes: A - Archive, R - Read Only, S - System, H - Hidden\n");
 	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
-	wprintf(L"\tsetmbr  Disk [--MBR_TYPE] [DEST_FILE]\n\t\tWrite MBR to FAT partition.\n\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus\n");
+	wprintf(L"\tsetmbr  Disk [--MBR_TYPE] [DEST_FILE]\n\t\tWrite MBR to FAT partition.\n\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus.\n\t\tOptions:\n\t\t\t -n\tDo NOT keep original disk signature and partition table.\n");
 	wprintf(L"Options:\n");
 	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
@@ -346,11 +346,11 @@ chmod_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst, const w
 }
 
 static bool
-write_mbr(const wchar_t* disk, const wchar_t* in_name)
+write_mbr(const wchar_t* disk, const wchar_t* in_name, bool keep)
 {
 	FATFS fs;
 	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	bool ret = fatio_setmbr(disk_id, in_name);
+	bool ret = fatio_setmbr(disk_id, in_name, keep);
 	return ret;
 }
 
@@ -593,7 +593,13 @@ wmain(int argc, wchar_t* argv[])
         }
         else
         {
-            if (write_mbr(argv[2], argv[3]))
+            bool keep = true;
+            for (int i = 2; i < argc; ++i)
+            {
+                if (_wcsicmp(argv[i], L"-n") == 0)
+                    keep = false;
+            }
+            if (write_mbr(argv[2], argv[3], keep))
                 grub_printf("MBR write successfully\n");
             else
             {
