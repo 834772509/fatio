@@ -4,7 +4,7 @@ A program for reading and writing FAT32/EXFAT file systems.
 
 ## command
 
-### List
+### list
 
 List supported partitions.
 
@@ -12,7 +12,7 @@ List supported partitions.
 fatio.exe list
 ```
 
-### Mkfs
+### mkfs
 
 Create an FAT/exFAT volume, Supported format options: FAT, FAT32, EXFAT.
 
@@ -22,7 +22,7 @@ fatio.exe mkfs Disk Part format [CLUSTER_SIZE]
 # fatio.exe mkfs 1 2 FAT
 ```
 
-### Label
+### label
 
 Set/remove the label of a volume.
 
@@ -32,7 +32,7 @@ fatio.exe label Disk Part [String]
 fatio.exe label Disk Part mydisk
 ```
 
-### Mkdir
+### mkdir
 
 Create a new directory.
 
@@ -52,7 +52,18 @@ fatio.exe ls Disk Part Dir
 # fatio.exe ls 1 2 \
 ```
 
-### Copy
+### cat
+
+Print files content from FAT partition.
+
+```shell
+fatio.exe cat Disk Part Dest_File
+# Examples:
+# fatio.exe cat 1 2 \text.txt
+# fatio.exe cat 1 2 \files\text.txt
+```
+
+### copy
 
 Copy files from FAT/EXFAT file systems.
 
@@ -64,7 +75,7 @@ fatio.exe copy Disk Part Src_File Dest_File
 # fatio.exe copy 1 2 D:\files \
 ```
 
-### Remove
+### remove
 
 Remove the file from FAT partition.
 
@@ -75,7 +86,7 @@ fatio.exe remove 1 2 \text.txt
 fatio.exe remove 1 2 \dir
 ```
 
-### Move
+### move
 
 move the file from FAT partition.
 
@@ -85,8 +96,7 @@ fatio.exe move Disk Part Src_File Dest_File
 fatio.exe move 1 2 \text.txt \abc.txt
 ```
 
-
-### Extract
+### extract
 
 Extract the archive file to FAT partition.
 
@@ -96,7 +106,7 @@ fatio.exe extract Disk Part File
 fatio.exe extract 1 2 D:\windows.iso
 ```
 
-### Dump
+### dump
 
 Dump the file from FAT partition.
 
@@ -107,7 +117,7 @@ fatio.exe dump 1 2 text.txt D:\text.txt
 fatio.exe dump 1 2 \dir\text.txt D:\text.txt
 ```
 
-### Chmod
+### chmod
 
 Change file attributes for files on a FAT partition.
 
@@ -123,7 +133,7 @@ fatio.exe chmod Disk Part File [+/-A] [+/-H] [+/-R] [+/-S]
 # Examples:
 fatio.exe chmod 1 2 text.txt +A +H +R
 ```
-### Setmbr
+### setmbr
 
 Set disk MBR，support types: empty, nt5, nt6, grub4dos, ultraiso, rufus.
 
