@@ -357,183 +357,257 @@ write_mbr(const wchar_t* disk, const wchar_t* in_name)
 int
 wmain(int argc, wchar_t* argv[])
 {
-	grub_module_init();
-	setlocale(LC_ALL, "chs");
+    grub_module_init();
+    setlocale(LC_ALL, "chs");
 
-	// parse options
-	for (int i = 0; i < argc; ++i)
-	{
-		if (_wcsicmp(argv[i], L"-b") == 0 && i + 1 < argc)
-			BUFFER_SIZE = _wtoi(argv[i + 1]) * 1024;
-	}
+    int exit_code = 0;
 
-	// parse cmdline
-	if (argc < 2)
-		print_help(argv[0]);
-	else if (_wcsicmp(argv[1], L"LIST") == 0)
-	{
-		wchar_t* disk = NULL;
-		bool list_all = false;
+    // parse options
+    for (int i = 0; i < argc; ++i)
+    {
+        if (_wcsicmp(argv[i], L"-b") == 0 && i + 1 < argc)
+            BUFFER_SIZE = _wtoi(argv[i + 1]) * 1024;
+    }
 
-		for (int i = 2; i < argc; ++i)
-		{
-			if (argv[i][0] == L'-')
-			{
-				if (_wcsicmp(argv[i], L"-a") == 0)
-					list_all = true;
-			}
-			else
-				disk = argv[i];
-		}
-		print_list(disk, list_all);
-	}
+    // parse cmdline
+    if (argc < 2)
+    {
+        print_help(argv[0]);
+        exit_code = -1;
+    }
+    else if (_wcsicmp(argv[1], L"LIST") == 0)
+    {
+        wchar_t* disk = NULL;
+        bool list_all = false;
 
-	else if (_wcsicmp(argv[1], L"COPY") == 0)
-	{
-		if (argc < 6)
-			print_help(argv[0]);
-		else
-		{
-			bool update = false;
-			for (int i = 2; i < argc; ++i)
-			{
-				if (_wcsicmp(argv[i], L"-u") == 0)
-					update = true;
-			}
-			if (copy_file(argv[2], argv[3], argv[4], argv[5], update))
-				grub_printf("File copy successfully\n");
-			else
-				grub_printf("Failed to copy file\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"MKDIR") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else
-		{
-			if (mkdir(argv[2], argv[3], argv[4]))
-				grub_printf("Directory created successfully\n");
-			else
-				grub_printf("Failed to create directory\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"MKFS") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else
-		{
-			if (mkfs(argv[2], argv[3], argv[4], argc > 5 ? argv[5] : NULL))
-				grub_printf("Volume created successfully\n");
-			else
-				grub_printf("Failed to create volume\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"LABEL") == 0)
-	{
-		if (argc < 4)
-			print_help(argv[0]);
-		else
-		{
-			if (set_label(argv[2], argv[3], argc > 4 ? argv[4] : L""))
-				grub_printf("Label set successfully\n");
-			else
-				grub_printf("Failed to set label\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"EXTRACT") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else
-		{
-			if (extract(argv[2], argv[3], argv[4]))
-				grub_printf("File extract successfully\n");
-			else
-				grub_printf("Failed to extract file\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"DUMP") == 0)
-	{
-		if (argc < 6)
-			print_help(argv[0]);
-		else
-		{
-			if (dump_file(argv[2], argv[3], argv[4], argv[5]))
-				grub_printf("File dump successfully\n");
-			else
-				grub_printf("Failed to dump file\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"REMOVE") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else
-		{
-			if (remove_file(argv[2], argv[3], argv[4]))
-				grub_printf("File remove successfully\n");
-			else
-				grub_printf("Failed to remove file\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"LS") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else
-			list_file(argv[2], argv[3], argv[4]);
-	}
-	else if (_wcsicmp(argv[1], L"MOVE") == 0)
-	{
-		if (argc < 6)
-			print_help(argv[0]);
-		else
-		{
-			if (move_file(argv[2], argv[3], argv[4], argv[5]))
-				grub_printf("File move successfully\n");
-			else
-				grub_printf("Failed to move file\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"CAT") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else
-			cat_file(argv[2], argv[3], argv[4]);
-	}
-	else if (_wcsicmp(argv[1], L"CHMOD") == 0)
-	{
-		if (argc < 5)
-			print_help(argv[0]);
-		else {
-			const wchar_t* attributes[4];
-			for (int i = 0; i < argc - 4; ++i) {
-				attributes[i] = argv[i + 5];
-			}
-			attributes[argc - 4] = NULL;
-			if (chmod_file(argv[2], argv[3], argv[4], attributes))
-				grub_printf("File chmod successfully\n");
-			else
-				grub_printf("Failed chmod file\n");
-		}
-	}
-	else if (_wcsicmp(argv[1], L"SETMBR") == 0)
-	{
-		if (argc < 3)
-			print_help(argv[0]);
-		else
-			if (write_mbr(argv[2], argv[3]))
-				grub_printf("MBR write successfully\n");
-			else
-				grub_printf("Failed write MBR\n");
-	}
-	else
-		print_help(argv[0]);
+        for (int i = 2; i < argc; ++i)
+        {
+            if (argv[i][0] == L'-')
+            {
+                if (_wcsicmp(argv[i], L"-a") == 0)
+                    list_all = true;
+            }
+            else
+                disk = argv[i];
+        }
+        print_list(disk, list_all);
+    }
+    else if (_wcsicmp(argv[1], L"COPY") == 0)
+    {
+        if (argc < 6)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            bool update = false;
+            for (int i = 2; i < argc; ++i)
+            {
+                if (_wcsicmp(argv[i], L"-u") == 0)
+                    update = true;
+            }
+            if (copy_file(argv[2], argv[3], argv[4], argv[5], update))
+                grub_printf("File copy successfully\n");
+            else
+            {
+                grub_printf("Failed to copy file\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"MKDIR") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (mkdir(argv[2], argv[3], argv[4]))
+                grub_printf("Directory created successfully\n");
+            else
+            {
+                grub_printf("Failed to create directory\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"MKFS") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (mkfs(argv[2], argv[3], argv[4], argc > 5 ? argv[5] : NULL))
+                grub_printf("Volume created successfully\n");
+            else
+            {
+                grub_printf("Failed to create volume\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"LABEL") == 0)
+    {
+        if (argc < 4)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (set_label(argv[2], argv[3], argc > 4 ? argv[4] : L""))
+                grub_printf("Label set successfully\n");
+            else
+            {
+                grub_printf("Failed to set label\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"EXTRACT") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (extract(argv[2], argv[3], argv[4]))
+                grub_printf("File extract successfully\n");
+            else
+            {
+                grub_printf("Failed to extract file\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"DUMP") == 0)
+    {
+        if (argc < 6)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (dump_file(argv[2], argv[3], argv[4], argv[5]))
+                grub_printf("File dump successfully\n");
+            else
+            {
+                grub_printf("Failed to dump file\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"REMOVE") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (remove_file(argv[2], argv[3], argv[4]))
+                grub_printf("File remove successfully\n");
+            else
+            {
+                grub_printf("Failed to remove file\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"LS") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+            list_file(argv[2], argv[3], argv[4]);
+    }
+    else if (_wcsicmp(argv[1], L"MOVE") == 0)
+    {
+        if (argc < 6)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (move_file(argv[2], argv[3], argv[4], argv[5]))
+                grub_printf("File move successfully\n");
+            else
+            {
+                grub_printf("Failed to move file\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"CAT") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+            cat_file(argv[2], argv[3], argv[4]);
+    }
+    else if (_wcsicmp(argv[1], L"CHMOD") == 0)
+    {
+        if (argc < 5)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else {
+            const wchar_t* attributes[4];
+            for (int i = 0; i < argc - 4; ++i) {
+                attributes[i] = argv[i + 5];
+            }
+            attributes[argc - 4] = NULL;
+            if (chmod_file(argv[2], argv[3], argv[4], attributes))
+                grub_printf("File chmod successfully\n");
+            else
+            {
+                grub_printf("Failed chmod file\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"SETMBR") == 0)
+    {
+        if (argc < 3)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (write_mbr(argv[2], argv[3]))
+                grub_printf("MBR write successfully\n");
+            else
+            {
+                grub_printf("Failed write MBR\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else
+    {
+        print_help(argv[0]);
+        exit_code = -1;
+    }
+    grub_module_fini();
 
-	grub_module_fini();
-
-	return 0;
+    return exit_code;
 }
