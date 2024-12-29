@@ -29,7 +29,7 @@ Set/remove the label of a volume.
 ```shell
 fatio.exe label Disk Part [String]
 # Example:
-fatio.exe label Disk Part mydisk
+# fatio.exe label 1 2 mydisk
 ```
 
 ### mkdir
@@ -68,11 +68,13 @@ fatio.exe cat Disk Part Dest_File
 Copy files from FAT/EXFAT file systems.
 
 ```shell
-fatio.exe copy Disk Part Src_File Dest_File
+fatio.exe copy Disk Part Src_File Dest_File [-y]
 # Examples:
 # fatio.exe copy 1 2 D:\text.txt text.txt
 # fatio.exe copy 1 2 D:\text.txt \dir\text.txt
 # fatio.exe copy 1 2 D:\files \
+# Update mode, copy only when the source file is inconsistent
+# fatio.exe copy 1 2 D:\files \ -y
 ```
 
 ### remove
@@ -82,8 +84,8 @@ Remove the file from FAT partition.
 ```shell
 fatio.exe remove Disk Part Dest_File
 # Examples:
-fatio.exe remove 1 2 \text.txt
-fatio.exe remove 1 2 \dir
+# fatio.exe remove 1 2 \text.txt
+# fatio.exe remove 1 2 \dir
 ```
 
 ### move
@@ -93,7 +95,7 @@ move the file from FAT partition.
 ```shell
 fatio.exe move Disk Part Src_File Dest_File
 # Examples:
-fatio.exe move 1 2 \text.txt \abc.txt
+# fatio.exe move 1 2 \text.txt \abc.txt
 ```
 
 ### extract
@@ -103,7 +105,7 @@ Extract the archive file to FAT partition.
 ```shell
 fatio.exe extract Disk Part File
 # Example:
-fatio.exe extract 1 2 D:\windows.iso
+# fatio.exe extract 1 2 D:\windows.iso
 ```
 
 ### dump
@@ -113,8 +115,8 @@ Dump the file from FAT partition.
 ```shell
 fatio.exe dump Disk Part Src_File Dest_File
 # Examples:
-fatio.exe dump 1 2 text.txt D:\text.txt
-fatio.exe dump 1 2 \dir\text.txt D:\text.txt
+# fatio.exe dump 1 2 text.txt D:\text.txt
+# fatio.exe dump 1 2 \dir\text.txt D:\text.txt
 ```
 
 ### chmod
@@ -131,17 +133,18 @@ Change file attributes for files on a FAT partition.
 ```shell
 fatio.exe chmod Disk Part File [+/-A] [+/-H] [+/-R] [+/-S]
 # Examples:
-fatio.exe chmod 1 2 text.txt +A +H +R
+# fatio.exe chmod 1 2 text.txt +A +H +R
 ```
 ### setmbr
 
 Set disk MBR，support types: empty, nt5, nt6, grub4dos, ultraiso, rufus.
 
 ```shell
-fatio.exe setmbr Disk [--MBR_TYPE] [DEST_FILE]
+fatio.exe setmbr Disk [--MBR_TYPE] [DEST_FILE] [-n]
 # Examples:
-fatio.exe setmbr 1 --nt6
-fatio.exe setmbr 1 --grub4dos
-# custom mbr file
-fatio.exe setmbr 1 D:\mbr.bin
+# fatio.exe setmbr 1 --nt6
+# fatio.exe setmbr 1 --grub4dos
+# fatio.exe setmbr 1 D:\mbr.bin
+# Do NOT keep original disk signature and partition table
+# fatio.exe setmbr 1 D:\mbr.bin -n
 ```
