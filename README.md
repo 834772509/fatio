@@ -170,3 +170,14 @@ Common partition type identifiers:
 |   0x83    |    Linux    |
 |   0x82    | Linux Swap  |
 |   0x05    |  扩展分区   |
+
+### setactive
+
+Set partition active.
+
+```shell
+fatio.exe setactive Disk Part
+# Examples:
+# fatio.exe setactive 1 1
+# fatio.exe setactive 1 2
+```

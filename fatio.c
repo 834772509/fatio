@@ -21,22 +21,24 @@ print_help(const wchar_t* prog_name)
 {
 	wprintf(L"Usage: %s Command [Options]\n", prog_name);
 	wprintf(L"Command:\n");
-	wprintf(L"\tlist    [Disk]\n\t\tList supported partitions.\n\t\tOptions:\n\t\t\t -a\tShow all partitions.\n");
-	wprintf(L"\tls      Disk Part DEST_DIR\n\t\tList files in the specified directory.\n");
-	wprintf(L"\tcopy    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file into FAT partition.\n\t\tOptions:\n\t\t\t -y\tUpdate mode, copy only when the source file is inconsistent.\n");
-	wprintf(L"\tmkdir   Disk Part DIR\n\t\tCreate a new directory.\n");
-	wprintf(L"\tmkfs    Disk Part FORMAT [CLUSTER_SIZE]\n\t\tCreate an FAT/exFAT volume.\n\t\tSupported format options: FAT, FAT32, EXFAT.\n");
-	wprintf(L"\tlabel   Disk Part [STRING]\n\t\tSet/remove the label of a volume.\n");
-	wprintf(L"\textract Disk Part FILE\n\t\tExtract the archive file to FAT partition.\n");
-	wprintf(L"\tdump    Disk Part SRC_FILE DEST_FILE\n\t\tCopy the file from FAT partition.\n");
-	wprintf(L"\tremove  Disk Part DEST_FILE\n\t\tRemove the file from FAT partition.\n");
-	wprintf(L"\tmove    Disk Part SRC_FILE DEST_FILE\n\t\tRename/move files from FAT partition.\n");
-	wprintf(L"\tchmod   Disk Part DEST_FILE [+/-A] [+/-H] [+/-R] [+/-S]\n\t\tChange file attributes for files on a FAT partition.\n\t\tAttributes: A - Archive, R - Read Only, S - System, H - Hidden\n");
-	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
-	wprintf(L"\tsetmbr  Disk [--MBR_TYPE] [DEST_FILE]\n\t\tWrite MBR to FAT partition.\n\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus.\n\t\tOptions:\n\t\t\t -n\tDo NOT keep original disk signature and partition table.\n");
-    wprintf(L"\tsetid   Disk Part PART_ID\n\t\tSet partition type id.\n");
+	wprintf(L"\tlist        [Disk]\n\t\t\tList supported partitions.\n\t\t\tOptions:\n\t\t\t\t -a\tShow all partitions.\n");
+    wprintf(L"\tls          Disk Part DEST_DIR\n\t\t\tList files in the specified directory.\n");
+    wprintf(L"\tcopy        Disk Part SRC_FILE DEST_FILE\n\t\t\tCopy the file into FAT partition.\n\t\t\tOptions:\n\t\t\t\t -y\tUpdate mode, copy only when the source file is inconsistent.\n");
+    wprintf(L"\tmkdir       Disk Part DIR\n\t\t\tCreate a new directory.\n");
+    wprintf(L"\tmkfs        Disk Part FORMAT [CLUSTER_SIZE]\n\t\t\tCreate an FAT/exFAT volume.\n\t\t\tSupported format options: FAT, FAT32, EXFAT.\n");
+    wprintf(L"\tlabel       Disk Part [STRING]\n\t\t\tSet/remove the label of a volume.\n");
+    wprintf(L"\textract     Disk Part FILE\n\t\t\tExtract the archive file to FAT partition.\n");
+    wprintf(L"\tdump        Disk Part SRC_FILE DEST_FILE\n\t\t\tCopy the file from FAT partition.\n");
+    wprintf(L"\tremove      Disk Part DEST_FILE\n\t\t\tRemove the file from FAT partition.\n");
+    wprintf(L"\tmove        Disk Part SRC_FILE DEST_FILE\n\t\t\tRename/move files from FAT partition.\n");
+    wprintf(L"\tchmod       Disk Part DEST_FILE [+/-A] [+/-H] [+/-R] [+/-S]\n\t\t\tChange file attributes for files on a FAT partition.\n\t\t\tAttributes: A - Archive, R - Read Only, S - System, H - Hidden\n");
+    wprintf(L"\tcat         Disk Part DEST_FILE\n\t\t\tPrint files content from FAT partition.\n");
+    wprintf(L"\tsetmbr      Disk [--MBR_TYPE] [DEST_FILE]\n\t\t\tWrite MBR to FAT partition.\n\t\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus.\n\t\t\tOptions:\n\t\t\t\t -n\tDo NOT keep original disk signature and partition table.\n");
+    wprintf(L"\tsetpbr      Disk Part --PBR_TYPE\n\t\t\tWrite PBR to partition.\n\t\t\tPBR_TYPE: nt5, nt6, grub4dos.\n");
+    wprintf(L"\tsetid       Disk Part PART_ID\n\t\t\tSet partition type id.\n");
+    wprintf(L"\tsetactive   Disk Part\n\t\t\tSet partition active.\n");
     wprintf(L"Options:\n");
-	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations(default 32MB).\n");
+	wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
 
 void loader(int rate)
@@ -378,6 +380,16 @@ write_part_id(const wchar_t* disk, const wchar_t* part, const wchar_t* in_name)
     return ret;
 }
 
+static bool
+active_part(const wchar_t* disk, const wchar_t* part)
+{
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+
+    bool ret = fatio_set_active_partition(disk_id, part_id);
+    return ret;
+}
+
 int
 wmain(int argc, wchar_t* argv[])
 {
@@ -646,6 +658,24 @@ wmain(int argc, wchar_t* argv[])
             else
             {
                 grub_printf("Failed set part id\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"setactive") == 0)
+    {
+        if (argc < 3)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (active_part(argv[2], argv[3]))
+                grub_printf("Active part successfully\n");
+            else
+            {
+                grub_printf("Failed active part\n");
                 exit_code = -1;
             }
         }
