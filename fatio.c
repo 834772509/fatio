@@ -69,8 +69,21 @@ callback_enum_disk(const char* name, void* data)
 		return 0;
 	}
 
-	grub_errno = GRUB_ERR_NONE;
+    int fat_size = 0;
+    struct grub_fat_data* fsdata;
 	fs = grub_fs_probe(disk);
+    fsdata = grub_fat_mount(disk);
+    if (fsdata)
+    {
+        fat_size = fsdata->fat_size;
+        grub_free(fsdata);
+    }
+    if (fat_size == 12)
+        fs->name = "fat12";
+    else if (fat_size == 16)
+        fs->name = "fat16";
+    else if (fat_size == 32)
+        fs->name = "fat32";
 
 	// filter hard drive
 	if (callback_data && callback_data->disk != NULL && grub_strtoul(name + 2, NULL, 10) != wcstoul(callback_data->disk, NULL, 10))
@@ -81,7 +94,7 @@ callback_enum_disk(const char* name, void* data)
 
 	// filter file system
 	if (callback_data && callback_data->show_all_hard_drive == false) {
-		if (!fs || (grub_strcmp(fs->name, "fat") == 0 && grub_strcmp(fs->name, "exfat") == 0))
+		if (!fs || (grub_strcmp(fs->name, "fat16") == 0 && grub_strcmp(fs->name, "fat32") == 0 && grub_strcmp(fs->name, "exfat") == 0))
 		{
 			grub_disk_close(disk);
 			return 0;
