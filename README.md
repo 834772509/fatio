@@ -124,7 +124,7 @@ fatio.exe dump Disk Part Src_File Dest_File
 Change file attributes for files on a FAT partition.
 
 | Attributes | Description |
-|------------|-------------|
+| ---------- | ----------- |
 | A          | Archive     |
 | R          | Read Only   |
 | S          | System      |
@@ -135,6 +135,7 @@ fatio.exe chmod Disk Part File [+/-A] [+/-H] [+/-R] [+/-S]
 # Examples:
 # fatio.exe chmod 1 2 text.txt +A +H +R
 ```
+
 ### setmbr
 
 Set disk MBR，support types: empty, nt5, nt6, grub4dos, ultraiso, rufus.
@@ -148,3 +149,24 @@ fatio.exe setmbr Disk [--MBR_TYPE] [DEST_FILE] [-n]
 # Do NOT keep original disk signature and partition table
 # fatio.exe setmbr 1 D:\mbr.bin -n
 ```
+
+### setpartid
+
+Set part id type (e.g. `0x07` represents NFT/exFAT, `0x0C` represents FAT32).
+
+```shell
+fatio.exe setpartid Disk Part ID
+# Examples:
+# fatio.exe setpartid 1 1 0C
+# fatio.exe setpartid 1 2 EF
+```
+
+Common partition type identifiers:
+
+| part type | part format |
+| :-------: | :---------: |
+|   0x07    | NTFS/exFAT  |
+|   0x0C    | FAT32 (LBA) |
+|   0x83    |    Linux    |
+|   0x82    | Linux Swap  |
+|   0x05    |  扩展分区   |

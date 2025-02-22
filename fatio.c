@@ -34,7 +34,8 @@ print_help(const wchar_t* prog_name)
 	wprintf(L"\tchmod   Disk Part DEST_FILE [+/-A] [+/-H] [+/-R] [+/-S]\n\t\tChange file attributes for files on a FAT partition.\n\t\tAttributes: A - Archive, R - Read Only, S - System, H - Hidden\n");
 	wprintf(L"\tcat     Disk Part DEST_FILE\n\t\tPrint files content from FAT partition.\n");
 	wprintf(L"\tsetmbr  Disk [--MBR_TYPE] [DEST_FILE]\n\t\tWrite MBR to FAT partition.\n\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus.\n\t\tOptions:\n\t\t\t -n\tDo NOT keep original disk signature and partition table.\n");
-	wprintf(L"Options:\n");
+    wprintf(L"\tsetid   Disk Part PART_ID\n\t\tSet partition type id.\n");
+    wprintf(L"Options:\n");
 	wprintf(L"\t-b      BufferSize\n\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
 
@@ -354,6 +355,29 @@ write_mbr(const wchar_t* disk, const wchar_t* in_name, bool keep)
 	return ret;
 }
 
+int convert_to_grub_uint8(const wchar_t* in_name, grub_uint8_t* out_value) {
+    if (wcslen(in_name) != 2) return -1;
+    *out_value = (grub_uint8_t)((wcschr(L"0123456789ABCDEFabcdef", in_name[0]) - L"0123456789ABCDEFabcdef") << 4 |
+        (wcschr(L"0123456789ABCDEFabcdef", in_name[1]) - L"0123456789ABCDEFabcdef"));
+    return 0;
+}
+
+static bool
+write_part_id(const wchar_t* disk, const wchar_t* part, const wchar_t* in_name)
+{
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+
+    grub_uint8_t in_value = 0;
+    if (convert_to_grub_uint8(in_name, &in_value) != 0) {
+        wprintf(L"Invalid part id %s\n", in_name);
+        return false;
+    }
+
+    bool ret = fatio_set_partition_type(disk_id, part_id, in_value);
+    return ret;
+}
+
 int
 wmain(int argc, wchar_t* argv[])
 {
@@ -608,6 +632,24 @@ wmain(int argc, wchar_t* argv[])
             }
         }
     }
+    else if (_wcsicmp(argv[1], L"SETID") == 0)
+    {
+        if (argc < 4)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (write_part_id(argv[2], argv[3], argv[4]))
+                grub_printf("Part id set successfully\n");
+            else
+            {
+                grub_printf("Failed set part id\n");
+                exit_code = -1;
+            }
+        }
+        }
     else
     {
         print_help(argv[0]);

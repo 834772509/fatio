@@ -245,6 +245,7 @@
     <ClCompile Include="ls.c" />
     <ClCompile Include="mkdir.c" />
     <ClCompile Include="setmbr.c" />
+    <ClCompile Include="setid.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h" />

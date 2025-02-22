@@ -165,6 +165,9 @@
     <ClCompile Include="setmbr.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="setid.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h">

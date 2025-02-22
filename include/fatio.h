@@ -62,3 +62,6 @@ fatio_chmod(const wchar_t* path, const wchar_t* attributes[]);
 
 bool
 fatio_setmbr(const unsigned disk, const wchar_t* in_name, bool keep);
+
+bool
+fatio_set_partition_type(unsigned disk_id, unsigned partno, grub_uint8_t new_type);
