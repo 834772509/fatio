@@ -171,6 +171,9 @@
     <ClCompile Include="setactive.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="getid.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h">

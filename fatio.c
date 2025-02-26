@@ -36,6 +36,7 @@ print_help(const wchar_t* prog_name)
     wprintf(L"\tsetmbr      Disk [--MBR_TYPE] [DEST_FILE]\n\t\t\tWrite MBR to FAT partition.\n\t\t\tMBR_TYPE: empty, nt5, nt6, grub4dos, ultraiso, rufus.\n\t\t\tOptions:\n\t\t\t\t -n\tDo NOT keep original disk signature and partition table.\n");
     wprintf(L"\tsetpbr      Disk Part --PBR_TYPE\n\t\t\tWrite PBR to partition.\n\t\t\tPBR_TYPE: nt5, nt6, grub4dos.\n");
     wprintf(L"\tsetid       Disk Part PART_ID\n\t\t\tSet partition type id.\n");
+    wprintf(L"\tgetid       Disk Part\n\t\t\tGet partition type id.\n");
     wprintf(L"\tsetactive   Disk Part\n\t\t\tSet partition active.\n");
     wprintf(L"Options:\n");
 	wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 32MB).\n");
@@ -403,6 +404,15 @@ active_part(const wchar_t* disk, const wchar_t* part)
     return ret;
 }
 
+static grub_uint8_t
+get_part_id(const wchar_t* disk, const wchar_t* part)
+{
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+
+    grub_uint8_t ret = fatio_get_partition_type(disk_id, part_id);
+    return ret;
+}
 int
 wmain(int argc, wchar_t* argv[])
 {
@@ -675,7 +685,24 @@ wmain(int argc, wchar_t* argv[])
             }
         }
     }
-    else if (_wcsicmp(argv[1], L"setactive") == 0)
+    else if (_wcsicmp(argv[1], L"GETID") == 0)
+    {
+        if (argc < 3)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            grub_uint8_t id = get_part_id(argv[2], argv[3]);
+            if (id == 0xFF)
+            {
+                exit_code = -1;
+            }
+            grub_printf("%02X\n" , id);
+        }
+    }
+    else if (_wcsicmp(argv[1], L"SETACTIVE") == 0)
     {
         if (argc < 3)
         {
@@ -692,7 +719,7 @@ wmain(int argc, wchar_t* argv[])
                 exit_code = -1;
             }
         }
-        }
+    }
     else
     {
         print_help(argv[0]);
