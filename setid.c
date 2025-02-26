@@ -37,7 +37,7 @@ fatio_set_partition_type(unsigned disk_id, unsigned partno, grub_uint8_t new_typ
         }
 
     // check part number
-    if (partno < 1 || partno >= 5) {
+    if (partno < 1 || partno > 4) {
         grub_printf("Invalid partition number\n");
         grub_disk_close(disk);
         return false;
