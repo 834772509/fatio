@@ -20,6 +20,7 @@ Create an FAT/exFAT volume, Supported format options: FAT, FAT32, EXFAT.
 fatio.exe mkfs Disk Part format [CLUSTER_SIZE]
 # Example:
 # fatio.exe mkfs 1 2 FAT
+# fatio.exe mkfs 1 2 FAT 512
 ```
 
 ### label
@@ -180,4 +181,14 @@ fatio.exe setactive Disk Part
 # Examples:
 # fatio.exe setactive 1 1
 # fatio.exe setactive 1 2
+```
+
+### swap
+
+Swap partition order.
+
+```shell
+fatio.exe swap Disk Part1 Part2
+# Examples:
+# fatio.exe swap 1 1 2
 ```

@@ -202,6 +202,7 @@
     <ClCompile Include="cat.c" />
     <ClCompile Include="chmod.c" />
     <ClCompile Include="ctx.c" />
+    <ClCompile Include="getid.c" />
     <ClCompile Include="move.c" />
     <ClCompile Include="remove.c" />
     <ClCompile Include="dump.c" />
@@ -247,6 +248,7 @@
     <ClCompile Include="setactive.c" />
     <ClCompile Include="setmbr.c" />
     <ClCompile Include="setid.c" />
+    <ClCompile Include="swap.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fatfs\diskio.h" />

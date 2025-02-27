@@ -38,6 +38,7 @@ print_help(const wchar_t* prog_name)
     wprintf(L"\tsetid       Disk Part PART_ID\n\t\t\tSet partition type id.\n");
     wprintf(L"\tgetid       Disk Part\n\t\t\tGet partition type id.\n");
     wprintf(L"\tsetactive   Disk Part\n\t\t\tSet partition active.\n");
+    wprintf(L"\tswap        Disk Part\n\t\t\tSwap partition order.\n");
     wprintf(L"Options:\n");
 	wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
@@ -413,6 +414,18 @@ get_part_id(const wchar_t* disk, const wchar_t* part)
     grub_uint8_t ret = fatio_get_partition_type(disk_id, part_id);
     return ret;
 }
+
+static bool
+swap_part(const wchar_t* disk, const wchar_t* part1, const wchar_t* part2)
+{
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part1_id = wcstoul(part1, NULL, 10);
+    unsigned long part2_id = wcstoul(part2, NULL, 10);
+
+    bool ret = fatio_swap_partitions(disk_id, part1_id, part2_id);
+    return ret;
+}
+
 int
 wmain(int argc, wchar_t* argv[])
 {
@@ -720,6 +733,24 @@ wmain(int argc, wchar_t* argv[])
             }
         }
     }
+    else if (_wcsicmp(argv[1], L"SWAP") == 0)
+    {
+        if (argc < 4)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (swap_part(argv[2], argv[3], argv[4]))
+                grub_printf("Swap partition successfully\n");
+            else
+            {
+                grub_printf("Failed swap partition\n");
+                exit_code = -1;
+            }
+        }
+        }
     else
     {
         print_help(argv[0]);

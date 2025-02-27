@@ -71,3 +71,6 @@ fatio_get_partition_type(unsigned disk_id, unsigned partno);
 
 bool
 fatio_set_active_partition(unsigned disk_id, unsigned partno);
+
+bool
+fatio_swap_partitions(unsigned disk_id, unsigned partno1, unsigned partno2);
