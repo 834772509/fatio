@@ -1,5 +1,4 @@
-﻿
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <fatio.h>
 #include <dl.h>
 #include <wchar.h>
@@ -11,17 +10,18 @@
 #include <grub/err.h>
 #include <grub/partition.h>
 #include <grub/fat.h>
+#include <grub/ntfs.h>
 
 #include "fatfs/ff.h"
 
-int BUFFER_SIZE = 0x2000000; //32MB
+int BUFFER_SIZE = 0x2000000; // 32MB
 
 static void
-print_help(const wchar_t* prog_name)
+print_help(const wchar_t *prog_name)
 {
-	wprintf(L"Usage: %s Command [Options]\n", prog_name);
-	wprintf(L"Command:\n");
-	wprintf(L"\tlist        [Disk]\n\t\t\tList supported partitions.\n\t\t\tOptions:\n\t\t\t\t -a\tShow all partitions.\n");
+    wprintf(L"Usage: %s Command [Options]\n", prog_name);
+    wprintf(L"Command:\n");
+    wprintf(L"\tlist        [Disk]\n\t\t\tList supported partitions.\n\t\t\tOptions:\n\t\t\t\t -a\tShow all partitions.\n");
     wprintf(L"\tls          Disk Part DEST_DIR\n\t\t\tList files in the specified directory.\n");
     wprintf(L"\tcopy        Disk Part SRC_FILE DEST_FILE\n\t\t\tCopy the file into FAT partition.\n\t\t\tOptions:\n\t\t\t\t -y\tUpdate mode, copy only when the source file is inconsistent.\n");
     wprintf(L"\tmkdir       Disk Part DIR\n\t\t\tCreate a new directory.\n");
@@ -40,353 +40,367 @@ print_help(const wchar_t* prog_name)
     wprintf(L"\tsetactive   Disk Part\n\t\t\tSet partition active.\n");
     wprintf(L"\tswap        Disk Part\n\t\t\tSwap partition order.\n");
     wprintf(L"Options:\n");
-	wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 32MB).\n");
+    wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 32MB).\n");
 }
 
 void loader(int rate)
 {
-	char proc[102];
-	memset(proc, '\0', sizeof(proc));
-	for (int i = 0; i < rate; i++)
-		proc[i] = '=';
-	printf("[%-100s] [%d%%]\r", proc, rate);
-	fflush(stdout);
+    char proc[102];
+    memset(proc, '\0', sizeof(proc));
+    for (int i = 0; i < rate; i++)
+        proc[i] = '=';
+    printf("[%-100s] [%d%%]\r", proc, rate);
+    fflush(stdout);
 }
 
 static int
-callback_enum_disk(const char* name, void* data)
+callback_enum_disk(const char *name, void *data)
 {
-	grub_disk_t disk = NULL;
-	grub_fs_t fs = NULL;
-	callback_enum_disk_data* callback_data = (callback_enum_disk_data*)data;
+    grub_disk_t disk = NULL;
+    grub_fs_t fs = NULL;
+    callback_enum_disk_data *callback_data = (callback_enum_disk_data *)data;
 
-	grub_errno = GRUB_ERR_NONE;
-	disk = grub_disk_open(name);
-	grub_errno = GRUB_ERR_NONE;
-	if (disk == NULL)
-		return 0;
-	if (disk->dev->id != GRUB_DISK_DEVICE_WINDISK_ID || !disk->partition)
-	{
-		grub_disk_close(disk);
-		return 0;
-	}
-
-    int fat_size = 0;
-    struct grub_fat_data* fsdata;
-	fs = grub_fs_probe(disk);
-    fsdata = grub_fat_mount(disk);
-    if (fsdata)
+    grub_errno = GRUB_ERR_NONE;
+    disk = grub_disk_open(name);
+    grub_errno = GRUB_ERR_NONE;
+    if (disk == NULL)
+        return 0;
+    if (disk->dev->id != GRUB_DISK_DEVICE_WINDISK_ID || !disk->partition)
     {
-        fat_size = fsdata->fat_size;
-        grub_free(fsdata);
+        grub_disk_close(disk);
+        return 0;
     }
-    if (fat_size == 12)
-        fs->name = "fat12";
-    else if (fat_size == 16)
-        fs->name = "fat16";
-    else if (fat_size == 32)
-        fs->name = "fat32";
 
-	// filter hard drive
-	if (callback_data && callback_data->disk != NULL && grub_strtoul(name + 2, NULL, 10) != wcstoul(callback_data->disk, NULL, 10))
-	{
-		grub_disk_close(disk);
-		return 0;
-	}
+    // Check filesystem type
+    grub_uint8_t buf[512];
+    if (grub_disk_read(disk, 0, 0, sizeof(buf), buf) == 0)
+    {
+        if (grub_memcmp(buf + 3, "NTFS    ", 8) == 0)
+        {
+            fs = &grub_ntfs_fs;
+        }
+        else
+        {
+            int fat_size = 0;
+            struct grub_fat_data *fsdata;
+            fs = grub_fs_probe(disk);
+            fsdata = grub_fat_mount(disk);
+            if (fsdata)
+            {
+                fat_size = fsdata->fat_size;
+                grub_free(fsdata);
+            }
+            if (fat_size == 12)
+                fs->name = "fat12";
+            else if (fat_size == 16)
+                fs->name = "fat16";
+            else if (fat_size == 32)
+                fs->name = "fat32";
+        }
+    }
 
-	// filter file system
-	if (callback_data && callback_data->show_all_hard_drive == false) {
-		if (!fs || (grub_strcmp(fs->name, "fat16") == 0 && grub_strcmp(fs->name, "fat32") == 0 && grub_strcmp(fs->name, "exfat") == 0))
-		{
-			grub_disk_close(disk);
-			return 0;
-		}
-	}
+    // filter hard drive
+    if (callback_data && callback_data->disk != NULL && grub_strtoul(name + 2, NULL, 10) != wcstoul(callback_data->disk, NULL, 10))
+    {
+        grub_disk_close(disk);
+        return 0;
+    }
 
-	grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
-	grub_printf("%d\t", disk->partition->number + 1);
-	grub_printf("%s\t", fs ? fs->name : "-");
-	grub_printf("%-10s\t", grub_get_human_size(grub_disk_native_sectors(disk) << GRUB_DISK_SECTOR_BITS, GRUB_HUMAN_SIZE_SHORT));
+    // filter file system
+    if (callback_data && callback_data->show_all_hard_drive == false)
+    {
+        if (!fs || (grub_strcmp(fs->name, "fat16") == 0 && grub_strcmp(fs->name, "fat32") == 0 && grub_strcmp(fs->name, "exfat") == 0))
+        {
+            grub_disk_close(disk);
+            return 0;
+        }
+    }
 
-	if (fs && fs->fs_label)
-	{
+    grub_printf("%lu\t", grub_strtoul(name + 2, NULL, 10));
+    grub_printf("%d\t", disk->partition->number + 1);
+    grub_printf("%s\t", fs ? fs->name : "-");
+    grub_printf("%-10s\t", grub_get_human_size(grub_disk_native_sectors(disk) << GRUB_DISK_SECTOR_BITS, GRUB_HUMAN_SIZE_SHORT));
 
-		char* label = NULL;
-		fs->fs_label(disk, &label);
-		if (label)
-			grub_printf("%s", label);
-		grub_free(label);
-
-	}
-	grub_printf("\n");
-	grub_disk_close(disk);
-	grub_errno = GRUB_ERR_NONE;
-	return 0;
+    if (fs && fs->fs_label)
+    {
+        char *label = NULL;
+        fs->fs_label(disk, &label);
+        if (label)
+            grub_printf("%s", label);
+        grub_free(label);
+    }
+    grub_printf("\n");
+    grub_disk_close(disk);
+    grub_errno = GRUB_ERR_NONE;
+    return 0;
 }
 
 static void
-print_list(wchar_t* disk, bool show_all_hard_drive)
+print_list(wchar_t *disk, bool show_all_hard_drive)
 {
-	grub_printf("Disk\tPart\tFS\tSize\t\tLabel\n");
-	grub_disk_iterate(callback_enum_disk, &(callback_enum_disk_data) { disk, show_all_hard_drive });
+    grub_printf("Disk\tPart\tFS\tSize\t\tLabel\n");
+    grub_disk_iterate(callback_enum_disk, &(callback_enum_disk_data){disk, show_all_hard_drive});
 }
 
 static bool
-copy_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wchar_t* dst, bool update)
+copy_file(const wchar_t *disk, const wchar_t *part, const wchar_t *src, const wchar_t *dst, bool update)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_copy(src, dst, update);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_copy(src, dst, update);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-mkdir(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
+mkdir(const wchar_t *disk, const wchar_t *part, const wchar_t *dst)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_mkdir(dst);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_mkdir(dst);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-mkfs(const wchar_t* disk, const wchar_t* part, const wchar_t* fmt, const wchar_t* cluster)
+mkfs(const wchar_t *disk, const wchar_t *part, const wchar_t *fmt, const wchar_t *cluster)
 {
-	MKFS_PARM opt = { .au_size = 0, .align = 8, .n_fat = 2 };
+    MKFS_PARM opt = {.au_size = 0, .align = 8, .n_fat = 2};
 
-	if (_wcsicmp(fmt, L"FAT") == 0)
-		opt.fmt = FM_FAT | FM_SFD;
-	else if (_wcsicmp(fmt, L"FAT32") == 0)
-		opt.fmt = FM_FAT32 | FM_SFD;
-	else if (_wcsicmp(fmt, L"EXFAT") == 0)
-		opt.fmt = FM_EXFAT | FM_SFD;
-	else
-	{
-		wprintf(L"Unsupported format %s\n", fmt);
-		return false;
-	}
+    if (_wcsicmp(fmt, L"FAT") == 0)
+        opt.fmt = FM_FAT | FM_SFD;
+    else if (_wcsicmp(fmt, L"FAT32") == 0)
+        opt.fmt = FM_FAT32 | FM_SFD;
+    else if (_wcsicmp(fmt, L"EXFAT") == 0)
+        opt.fmt = FM_EXFAT | FM_SFD;
+    else
+    {
+        wprintf(L"Unsupported format %s\n", fmt);
+        return false;
+    }
 
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
 
-	if (cluster)
-		opt.au_size = wcstoul(cluster, NULL, 10);
+    if (cluster)
+        opt.au_size = wcstoul(cluster, NULL, 10);
 
-	if (f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE) != FR_OK)
-		goto fail;
+    if (f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE) != FR_OK)
+        goto fail;
 
-	if ((opt.fmt & FM_FAT32) || (opt.fmt & FM_FAT))
-	{
-		struct grub_fat_bpb bpb;
-		if (grub_disk_read(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
-			goto fail;
-		bpb.num_hidden_sectors = (grub_uint32_t)grub_partition_get_start(g_ctx.disk->partition);
-		if (grub_disk_write(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
-			goto fail;
-	}
+    if ((opt.fmt & FM_FAT32) || (opt.fmt & FM_FAT))
+    {
+        struct grub_fat_bpb bpb;
+        if (grub_disk_read(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
+            goto fail;
+        bpb.num_hidden_sectors = (grub_uint32_t)grub_partition_get_start(g_ctx.disk->partition);
+        if (grub_disk_write(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
+            goto fail;
+    }
 
-	fatio_unset_disk();
-	return true;
+    fatio_unset_disk();
+    return true;
 fail:
-	fatio_unset_disk();
-	return false;
+    fatio_unset_disk();
+    return false;
 }
 
 static bool
-set_label(const wchar_t* disk, const wchar_t* part, const wchar_t* str)
+set_label(const wchar_t *disk, const wchar_t *part, const wchar_t *str)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	wchar_t label[48] = L"";
-	swprintf_s(label, 48, L"0:%s", str);
-	FRESULT res = f_setlabel(str);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return res == FR_OK;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    wchar_t label[48] = L"";
+    swprintf_s(label, 48, L"0:%s", str);
+    FRESULT res = f_setlabel(str);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return res == FR_OK;
 }
 
 static bool
-extract(const wchar_t* disk, const wchar_t* part, const wchar_t* file)
+extract(const wchar_t *disk, const wchar_t *part, const wchar_t *file)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_extract(file);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_extract(file);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-dump_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wchar_t* dst)
+dump_file(const wchar_t *disk, const wchar_t *part, const wchar_t *src, const wchar_t *dst)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_dump(src, dst);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_dump(src, dst);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-remove_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
+remove_file(const wchar_t *disk, const wchar_t *part, const wchar_t *dst)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_remove(dst);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_remove(dst);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-list_file(const wchar_t* disk, const wchar_t* part, const wchar_t* path)
+list_file(const wchar_t *disk, const wchar_t *part, const wchar_t *path)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
 
-	bool ret = fatio_list(path);
+    bool ret = fatio_list(path);
 
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-move_file(const wchar_t* disk, const wchar_t* part, const wchar_t* src, const wchar_t* dst)
+move_file(const wchar_t *disk, const wchar_t *part, const wchar_t *src, const wchar_t *dst)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_move(src, dst);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_move(src, dst);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-cat_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst)
+cat_file(const wchar_t *disk, const wchar_t *part, const wchar_t *dst)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_cat(dst);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_cat(dst);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-chmod_file(const wchar_t* disk, const wchar_t* part, const wchar_t* dst, const wchar_t* attributes[])
+chmod_file(const wchar_t *disk, const wchar_t *part, const wchar_t *dst, const wchar_t *attributes[])
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	unsigned long part_id = wcstoul(part, NULL, 10);
-	if (!fatio_set_disk(disk_id, part_id))
-	{
-		grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
-		return false;
-	}
-	f_mount(&fs, L"0:", 0);
-	bool ret = fatio_chmod(dst, attributes);
-	f_unmount(L"0:");
-	fatio_unset_disk();
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    if (!fatio_set_disk(disk_id, part_id))
+    {
+        grub_printf("Failed to open disk %lu part %lu\n", disk_id, part_id);
+        return false;
+    }
+    f_mount(&fs, L"0:", 0);
+    bool ret = fatio_chmod(dst, attributes);
+    f_unmount(L"0:");
+    fatio_unset_disk();
+    return ret;
 }
 
 static bool
-write_mbr(const wchar_t* disk, const wchar_t* in_name, bool keep)
+write_mbr(const wchar_t *disk, const wchar_t *in_name, bool keep)
 {
-	FATFS fs;
-	unsigned long disk_id = wcstoul(disk, NULL, 10);
-	bool ret = fatio_setmbr(disk_id, in_name, keep);
-	return ret;
+    FATFS fs;
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    bool ret = fatio_setmbr(disk_id, in_name, keep);
+    return ret;
 }
 
-int convert_to_grub_uint8(const wchar_t* in_name, grub_uint8_t* out_value) {
-    if (wcslen(in_name) != 2) return -1;
+int convert_to_grub_uint8(const wchar_t *in_name, grub_uint8_t *out_value)
+{
+    if (wcslen(in_name) != 2)
+        return -1;
     *out_value = (grub_uint8_t)((wcschr(L"0123456789ABCDEFabcdef", in_name[0]) - L"0123456789ABCDEFabcdef") << 4 |
-        (wcschr(L"0123456789ABCDEFabcdef", in_name[1]) - L"0123456789ABCDEFabcdef"));
+                                (wcschr(L"0123456789ABCDEFabcdef", in_name[1]) - L"0123456789ABCDEFabcdef"));
     return 0;
 }
 
 static bool
-write_part_id(const wchar_t* disk, const wchar_t* part, const wchar_t* in_name)
+write_part_id(const wchar_t *disk, const wchar_t *part, const wchar_t *in_name)
 {
     unsigned long disk_id = wcstoul(disk, NULL, 10);
     unsigned long part_id = wcstoul(part, NULL, 10);
 
     grub_uint8_t in_value = 0;
-    if (convert_to_grub_uint8(in_name, &in_value) != 0) {
+    if (convert_to_grub_uint8(in_name, &in_value) != 0)
+    {
         wprintf(L"Invalid part id %s\n", in_name);
         return false;
     }
@@ -396,7 +410,7 @@ write_part_id(const wchar_t* disk, const wchar_t* part, const wchar_t* in_name)
 }
 
 static bool
-active_part(const wchar_t* disk, const wchar_t* part)
+active_part(const wchar_t *disk, const wchar_t *part)
 {
     unsigned long disk_id = wcstoul(disk, NULL, 10);
     unsigned long part_id = wcstoul(part, NULL, 10);
@@ -406,7 +420,7 @@ active_part(const wchar_t* disk, const wchar_t* part)
 }
 
 static grub_uint8_t
-get_part_id(const wchar_t* disk, const wchar_t* part)
+get_part_id(const wchar_t *disk, const wchar_t *part)
 {
     unsigned long disk_id = wcstoul(disk, NULL, 10);
     unsigned long part_id = wcstoul(part, NULL, 10);
@@ -416,7 +430,7 @@ get_part_id(const wchar_t* disk, const wchar_t* part)
 }
 
 static bool
-swap_part(const wchar_t* disk, const wchar_t* part1, const wchar_t* part2)
+swap_part(const wchar_t *disk, const wchar_t *part1, const wchar_t *part2)
 {
     unsigned long disk_id = wcstoul(disk, NULL, 10);
     unsigned long part1_id = wcstoul(part1, NULL, 10);
@@ -426,8 +440,7 @@ swap_part(const wchar_t* disk, const wchar_t* part1, const wchar_t* part2)
     return ret;
 }
 
-int
-wmain(int argc, wchar_t* argv[])
+int wmain(int argc, wchar_t *argv[])
 {
     grub_module_init();
     setlocale(LC_ALL, "chs");
@@ -449,7 +462,7 @@ wmain(int argc, wchar_t* argv[])
     }
     else if (_wcsicmp(argv[1], L"LIST") == 0)
     {
-        wchar_t* disk = NULL;
+        wchar_t *disk = NULL;
         bool list_all = false;
 
         for (int i = 2; i < argc; ++i)
@@ -641,9 +654,11 @@ wmain(int argc, wchar_t* argv[])
             print_help(argv[0]);
             exit_code = -1;
         }
-        else {
-            const wchar_t* attributes[4];
-            for (int i = 0; i < argc - 4; ++i) {
+        else
+        {
+            const wchar_t *attributes[4];
+            for (int i = 0; i < argc - 4; ++i)
+            {
                 attributes[i] = argv[i + 5];
             }
             attributes[argc - 4] = NULL;
@@ -712,7 +727,7 @@ wmain(int argc, wchar_t* argv[])
             {
                 exit_code = -1;
             }
-            grub_printf("%02X\n" , id);
+            grub_printf("%02X\n", id);
         }
     }
     else if (_wcsicmp(argv[1], L"SETACTIVE") == 0)
@@ -750,7 +765,7 @@ wmain(int argc, wchar_t* argv[])
                 exit_code = -1;
             }
         }
-        }
+    }
     else
     {
         print_help(argv[0]);

@@ -28,6 +28,7 @@ void grub_module_init_part_msdos(void);
 
 void grub_module_init_exfat(void);
 void grub_module_init_fat(void);
+void grub_module_init_ntfs(void);
 void grub_module_init_iso9660(void);
 void grub_module_init_udf(void);
 void grub_module_init_wim(void);
@@ -43,6 +44,7 @@ grub_module_init(void)
 
 	grub_module_init_exfat();
 	grub_module_init_fat();
+	grub_module_init_ntfs();
 	grub_module_init_iso9660();
 	grub_module_init_udf();
 	grub_module_init_wim();
@@ -56,6 +58,7 @@ void grub_module_fini_part_msdos(void);
 
 void grub_module_fini_exfat(void);
 void grub_module_fini_fat(void);
+void grub_module_fini_ntfs(void);
 void grub_module_fini_iso9660(void);
 void grub_module_fini_udf(void);
 void grub_module_fini_wim(void);
@@ -71,6 +74,7 @@ grub_module_fini(void)
 
 	grub_module_fini_exfat();
 	grub_module_fini_fat();
+	grub_module_fini_ntfs();
 	grub_module_fini_iso9660();
 	grub_module_fini_udf();
 	grub_module_fini_wim();

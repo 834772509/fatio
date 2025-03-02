@@ -203,6 +203,7 @@
     <ClCompile Include="chmod.c" />
     <ClCompile Include="ctx.c" />
     <ClCompile Include="getid.c" />
+    <ClCompile Include="grub\fs\ntfs.c" />
     <ClCompile Include="move.c" />
     <ClCompile Include="remove.c" />
     <ClCompile Include="dump.c" />
@@ -273,6 +274,7 @@
     <ClInclude Include="include\grub\misc.h" />
     <ClInclude Include="include\grub\mm.h" />
     <ClInclude Include="include\grub\msdos_partition.h" />
+    <ClInclude Include="include\grub\ntfs.h" />
     <ClInclude Include="include\grub\partition.h" />
     <ClInclude Include="include\grub\safemath.h" />
     <ClInclude Include="include\grub\symbol.h" />
