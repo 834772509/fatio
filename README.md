@@ -139,7 +139,7 @@ fatio.exe chmod Disk Part File [+/-A] [+/-H] [+/-R] [+/-S]
 
 ### setmbr
 
-Set disk MBR，support types: empty, nt5, nt6, grub4dos, ultraiso, rufus.
+Set disk MBR, support types: empty, nt5, nt6, grub4dos, ultraiso, rufus.
 
 ```shell
 fatio.exe setmbr Disk [--MBR_TYPE] [DEST_FILE] [-n]
@@ -149,6 +149,17 @@ fatio.exe setmbr Disk [--MBR_TYPE] [DEST_FILE] [-n]
 # fatio.exe setmbr 1 D:\mbr.bin
 # Do NOT keep original disk signature and partition table
 # fatio.exe setmbr 1 D:\mbr.bin -n
+```
+
+### setpbr
+
+Set disk PBR, support types: nt5, nt6, grub4dos.
+
+```shell
+fatio.exe setpbr Disk Part [--PBR_TYPE]
+# Examples:
+# fatio.exe setmbr 1 1 --nt6
+# fatio.exe setmbr 1 2 --grub4dos
 ```
 
 ### setpartid

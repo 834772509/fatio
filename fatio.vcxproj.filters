@@ -165,6 +165,9 @@
     <ClCompile Include="setmbr.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="setpbr.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="grub\fs\ntfs.c">
       <Filter>源文件\grub\fs</Filter>
     </ClCompile>
@@ -273,6 +276,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="setmbr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="setpbr.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\grub\ntfs.h">

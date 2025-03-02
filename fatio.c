@@ -383,6 +383,15 @@ write_mbr(const wchar_t *disk, const wchar_t *in_name, bool keep)
     return ret;
 }
 
+static bool
+write_pbr(const wchar_t *disk, const wchar_t *part, const wchar_t *in_name)
+{
+    unsigned long disk_id = wcstoul(disk, NULL, 10);
+    unsigned long part_id = wcstoul(part, NULL, 10);
+    bool ret = fatio_setpbr(disk_id, part_id, in_name);
+    return ret;
+}
+
 int convert_to_grub_uint8(const wchar_t *in_name, grub_uint8_t *out_value)
 {
     if (wcslen(in_name) != 2)
@@ -691,6 +700,24 @@ int wmain(int argc, wchar_t *argv[])
             else
             {
                 grub_printf("Failed write MBR\n");
+                exit_code = -1;
+            }
+        }
+    }
+    else if (_wcsicmp(argv[1], L"SETPBR") == 0)
+    {
+        if (argc < 4)
+        {
+            print_help(argv[0]);
+            exit_code = -1;
+        }
+        else
+        {
+            if (write_pbr(argv[2], argv[3], argv[4]))
+                grub_printf("PBR write successfully\n");
+            else
+            {
+                grub_printf("Failed write PBR\n");
                 exit_code = -1;
             }
         }

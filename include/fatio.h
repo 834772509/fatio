@@ -64,6 +64,9 @@ bool
 fatio_setmbr(const unsigned disk, const wchar_t* in_name, bool keep);
 
 bool
+fatio_setpbr(const unsigned disk, const unsigned part, const wchar_t* in_name);
+
+bool
 fatio_set_partition_type(unsigned disk_id, unsigned partno, grub_uint8_t new_type);
 
 grub_uint8_t

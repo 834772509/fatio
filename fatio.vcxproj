@@ -249,6 +249,7 @@
     <ClCompile Include="setactive.c" />
     <ClCompile Include="setmbr.c" />
     <ClCompile Include="setid.c" />
+    <ClCompile Include="setpbr.c" />
     <ClCompile Include="swap.c" />
   </ItemGroup>
   <ItemGroup>
@@ -284,6 +285,7 @@
     <ClInclude Include="include\loopback.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="setmbr.h" />
+    <ClInclude Include="setpbr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
