@@ -14,7 +14,7 @@
 
 #include "fatfs/ff.h"
 
-int BUFFER_SIZE = 0x2000000; // 32MB
+int BUFFER_SIZE = 0x4000000; // 64MB
 
 static void
 print_help(const wchar_t *prog_name)
@@ -40,7 +40,7 @@ print_help(const wchar_t *prog_name)
     wprintf(L"\tsetactive   Disk Part\n\t\t\tSet partition active.\n");
     wprintf(L"\tswap        Disk Part\n\t\t\tSwap partition order.\n");
     wprintf(L"Options:\n");
-    wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 32MB).\n");
+    wprintf(L"\t-b      BufferSize\n\t\t\tSpecify the buffer size for file operations(default 64MB).\n");
 }
 
 void loader(int rate)
@@ -206,14 +206,33 @@ mkfs(const wchar_t *disk, const wchar_t *part, const wchar_t *fmt, const wchar_t
     if (cluster)
         opt.au_size = wcstoul(cluster, NULL, 10);
 
-    if (f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE) != FR_OK)
+    FRESULT fr = f_mkfs(L"0:", &opt, g_ctx.buffer, BUFFER_SIZE);
+    if (fr != FR_OK)
+    {
+        grub_printf("Failed to format volume (Error: %d)\n", fr);
         goto fail;
+    }
 
-    if ((opt.fmt & FM_FAT32) || (opt.fmt & FM_FAT))
+    // Check the file system type and update the number of hidden sectors
+    if ((opt.fmt & (FM_FAT | FM_FAT32)))
     {
         struct grub_fat_bpb bpb;
         if (grub_disk_read(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
             goto fail;
+
+        // If it is in FAT format, check if the partition size exceeds the FAT16 limit
+        if ((opt.fmt & FM_FAT) && _wcsicmp(fmt, L"FAT") == 0)
+        {
+            grub_uint32_t total_sectors = (bpb.num_total_sectors_16 == 0) ? bpb.num_total_sectors_32 : bpb.num_total_sectors_16;
+
+            if (total_sectors > 65525UL * bpb.sectors_per_cluster)
+            {
+                grub_printf("Error: Partition too large for FAT16 format\n");
+                goto fail;
+            }
+        }
+
+        // Update the number of hidden sectors
         bpb.num_hidden_sectors = (grub_uint32_t)grub_partition_get_start(g_ctx.disk->partition);
         if (grub_disk_write(g_ctx.disk, 0, 0, sizeof(bpb), &bpb) != GRUB_ERR_NONE)
             goto fail;
